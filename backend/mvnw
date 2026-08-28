@@ -1,0 +1,7 @@
+#!/bin/sh
+MAVEN_DIR="$HOME/.maven/apache-maven-3.9.9"
+if [ -f "$MAVEN_DIR/bin/mvn" ]; then
+    exec "$MAVEN_DIR/bin/mvn" "$@"
+else
+    exec mvn "$@"
+fi

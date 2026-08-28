@@ -1,0 +1,27 @@
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+*.local
+.env
+.env.*
+*.timestamp-*.mjs
+frontend/*.timestamp-*.mjs
+
+# Java / Maven / Backend
+target/
+backend/target/
+*.class
+*.jar
+*.war
+*.ear
+*.log
+
+# IDE & OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+.gemini/

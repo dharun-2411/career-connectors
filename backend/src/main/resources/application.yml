@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: career-connectors-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+  tomcat:
+    max-http-form-post-size: 20MB
+    max-swallow-size: 20MB
+
+# Security and JWT properties
+app:
+  jwt:
+    secret: ${APP_JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+    expiration-ms: ${APP_JWT_EXPIRATION_MS:86400000} # 24 hours
+    refresh-expiration-ms: ${APP_JWT_REFRESH_EXPIRATION_MS:604800000} # 7 days
+  ai-service:
+    base-url: ${APP_AI_SERVICE_BASE_URL:http://localhost:8000}
+    timeout-ms: ${APP_AI_SERVICE_TIMEOUT_MS:4000}
+    fallback-enabled: ${APP_AI_SERVICE_FALLBACK_ENABLED:true}
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:3000
+      - http://127.0.0.1:5173
+      - http://127.0.0.1:3000
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+
