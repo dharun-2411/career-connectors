@@ -217,6 +217,81 @@ const getMockDataForUrl = (url, method) => {
     };
   }
 
+  if (cleanUrl.includes('/roadmaps/trending')) {
+    return [
+      { domain: 'Generative AI & LLM Engineering', category: 'Artificial Intelligence', demandScore: 98, avgSalary: '$145k', popularity: 'High Growth', description: 'Master RAG, vector embeddings, fine-tuning, and LLMOps.' },
+      { domain: 'Cloud & Kubernetes Platform Engineering', category: 'DevOps & Infrastructure', demandScore: 94, avgSalary: '$135k', popularity: 'High Demand', description: 'Architect multi-cloud, container orchestration, and CI/CD pipelines.' },
+      { domain: 'Full-Stack Distributed Systems', category: 'Software Engineering', demandScore: 91, avgSalary: '$130k', popularity: 'Standard', description: 'Build enterprise microservices with Spring Boot, React, and Kafka.' },
+    ];
+  }
+
+  if (cleanUrl.includes('/roadmaps/generate') || cleanUrl.includes('/roadmaps')) {
+    return {
+      domain: 'AI & Full-Stack Cloud Engineering',
+      totalPhases: 3,
+      phases: [
+        {
+          phaseNumber: 1,
+          phaseName: 'Foundations & Core Languages',
+          duration: 'Weeks 1-4',
+          description: 'Master Java, TypeScript, and modern asynchronous paradigms.',
+          milestones: ['Java 21 Virtual Threads & OOP', 'React 18 & State Architecture', 'PostgreSQL Relational Schema Design'],
+        },
+        {
+          phaseNumber: 2,
+          phaseName: 'Enterprise Frameworks & Microservices',
+          duration: 'Weeks 5-8',
+          description: 'Build production-grade APIs and microservices.',
+          milestones: ['Spring Boot 3 RESTful Services', 'Spring Security & OAuth2/JWT', 'Dockerization & Containerization'],
+        },
+        {
+          phaseNumber: 3,
+          phaseName: 'AI Integration & Vector Systems',
+          duration: 'Weeks 9-12',
+          description: 'Integrate LLMs, vector search, and RAG pipelines.',
+          milestones: ['Vector Databases (pgvector)', 'LangChain & OpenAI API Integration', 'Production Cloud Deployment'],
+        },
+      ],
+    };
+  }
+
+  if (cleanUrl.includes('/ai/matching')) {
+    return {
+      matchScore: 89.5,
+      matchedSkills: ['Java', 'React.js', 'Spring Boot', 'PostgreSQL'],
+      missingSkills: ['Kubernetes', 'GraphQL'],
+      summary: 'Strong skill alignment with core full-stack requirements.',
+    };
+  }
+
+  if (cleanUrl.includes('/ai/skill-gap')) {
+    return {
+      matchPercentage: 82,
+      targetRole: 'Full-Stack AI Engineering Intern',
+      strengths: ['Core Java proficiency', 'React frontend development', 'Relational database schema modeling'],
+      gaps: [
+        { skill: 'Docker Containerization', priority: 'HIGH', recommendation: 'Complete containerization tutorial and build multi-stage Dockerfiles.' },
+        { skill: 'Vector Embeddings', priority: 'MEDIUM', recommendation: 'Learn pgvector extension and cosine similarity search.' },
+      ],
+      learningRoadmap: [
+        { step: 1, topic: 'Docker Fundamentals', duration: '1 week' },
+        { step: 2, topic: 'Vector Databases & pgvector', duration: '1 week' },
+      ],
+    };
+  }
+
+  if (cleanUrl.includes('/ai/career-suggestions') || cleanUrl.includes('/ai/career')) {
+    return {
+      primaryPath: 'Full-Stack AI Engineer',
+      marketDemand: 'Very High',
+      suggestedRoles: ['AI Application Developer', 'Backend Systems Engineer', 'Cloud Software Specialist'],
+      recommendedProjects: [
+        'Build a real-time semantic search engine with Spring Boot and pgvector',
+        'Create an autonomous resume parser with LangChain and React',
+      ],
+    };
+  }
+
   if (cleanUrl.includes('/ai/recommendations') || cleanUrl.includes('/ai/')) {
     return {
       recommendations: [

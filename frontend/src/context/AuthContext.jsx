@@ -47,12 +47,16 @@ export const AuthProvider = ({ children }) => {
       const isManual = localStorage.getItem('isManualAuth') === 'true';
 
       if (storedToken) {
-        if (isManual) {
-          const savedUser = localStorage.getItem('user');
-          if (savedUser) {
+        const savedUser = localStorage.getItem('user');
+        if (savedUser) {
+          try {
             setUser(JSON.parse(savedUser));
+          } catch (e) {
+            console.error('Error parsing stored user:', e);
           }
-        } else {
+        }
+
+        if (!isManual) {
           try {
             const res = await authApi.getMe();
             if (res && res.success) {
@@ -60,12 +64,7 @@ export const AuthProvider = ({ children }) => {
               localStorage.setItem('user', JSON.stringify(res.data));
             }
           } catch (err) {
-            console.error('Session validation failed:', err);
-            // If backend is unreachable or threw 500, preserve saved user to avoid locking out
-            const savedUser = localStorage.getItem('user');
-            if (!savedUser) {
-              logout();
-            }
+            console.error('Session validation failed, using cached session:', err);
           }
         }
       }
