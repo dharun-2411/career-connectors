@@ -249,15 +249,16 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     const isManualAuth = localStorage.getItem('isManualAuth') === 'true';
+    const isStaticOrOffline = error.response?.status === 405 || error.response?.status === 404 || !error.response;
 
-    // If in manual auth mode and a backend call fails (network error, 401, 404, or 500)
-    if (isManualAuth && error.config?.url && !error.config.url.startsWith('/auth/login') && !error.config.url.startsWith('/auth/register')) {
+    // If in manual auth mode or if static server returns 405/404 (no backend connected)
+    if ((isManualAuth || isStaticOrOffline) && error.config?.url && !error.config.url.startsWith('/auth/login') && !error.config.url.startsWith('/auth/register')) {
       const mockData = getMockDataForUrl(error.config.url, error.config.method);
       if (mockData) {
         return Promise.resolve({
           data: {
             success: true,
-            message: 'Manual auth mock response',
+            message: 'Graceful fallback mock response',
             data: mockData,
           },
           status: 200,

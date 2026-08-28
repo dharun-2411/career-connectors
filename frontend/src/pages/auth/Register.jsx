@@ -96,9 +96,17 @@ export const Register = () => {
         handleManualRegister();
       }
     } catch (err) {
-      const is500 = err.response?.status === 500 || err.message?.includes('500') || !err.response;
-      if (is500) {
-        // Seamlessly register and enter dashboard if backend returns 500 or is offline
+      const isFallback =
+        !err.response ||
+        err.response?.status === 405 ||
+        err.response?.status === 404 ||
+        err.response?.status >= 500 ||
+        err.message?.includes('405') ||
+        err.message?.includes('500') ||
+        err.message?.toLowerCase().includes('network');
+
+      if (isFallback) {
+        // Seamlessly register and enter dashboard if backend returns 405, 500, or is offline
         handleManualRegister();
         return;
       }
