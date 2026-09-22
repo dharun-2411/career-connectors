@@ -42,15 +42,28 @@ export const AdminCompanies = () => {
 
       // Sync verified companies in localStorage
       const verified = JSON.parse(localStorage.getItem('verified_companies') || '["1","2","recruiter@nexusai.com","hiring@cloudscale.io","shakthisaran@gmail.com"]');
+      const targetComp = companies.find((c) => c.id === companyId);
       if (verificationStatus === 'VERIFIED') {
         if (!verified.includes(String(companyId))) {
           verified.push(String(companyId));
         }
+        if (targetComp?.email && !verified.includes(targetComp.email.toLowerCase())) {
+          verified.push(targetComp.email.toLowerCase());
+        }
       } else {
         const idx = verified.indexOf(String(companyId));
         if (idx !== -1) verified.splice(idx, 1);
+        if (targetComp?.email) {
+          const emailIdx = verified.indexOf(targetComp.email.toLowerCase());
+          if (emailIdx !== -1) verified.splice(emailIdx, 1);
+        }
       }
       localStorage.setItem('verified_companies', JSON.stringify(verified));
+
+      // Sync registered_companies in localStorage
+      let regCompanies = JSON.parse(localStorage.getItem('registered_companies') || '[]');
+      regCompanies = regCompanies.map((c) => (String(c.id) === String(companyId) ? { ...c, verificationStatus } : c));
+      localStorage.setItem('registered_companies', JSON.stringify(regCompanies));
 
       await adminApi.verifyCompany(companyId, verificationStatus, 'Admin reviewed & verified credentials');
       fetchCompanies(currentPage);

@@ -138,14 +138,17 @@ export const RoadmapTimeline = ({
 
         <div className="space-y-6 relative before:absolute before:inset-0 before:left-5 before:w-0.5 before:bg-slate-800/80 before:z-0">
           {roadmap.phases?.map((phase, idx) => {
-            const isExpanded = expandedPhases[phase.phaseId] ?? true;
+            const phaseId = phase.phaseId || `phase_${phase.orderIndex || phase.phaseNumber || idx + 1}`;
+            const isExpanded = expandedPhases[phaseId] ?? true;
+            const orderNum = phase.orderIndex || phase.phaseNumber || (idx + 1);
+            const phaseTitle = phase.title || phase.phaseName || `Phase ${orderNum}`;
             const phaseCompleted = phase.milestones?.every(
-              (m, mIdx) => progress[`${phase.phaseId}_m_${mIdx}`]
+              (m, mIdx) => progress[`${phaseId}_m_${mIdx}`]
             );
 
             return (
               <div
-                key={phase.phaseId || idx}
+                key={phaseId}
                 className="relative z-10 pl-12 space-y-4 group"
               >
                 {/* Timeline node circle */}
@@ -156,20 +159,20 @@ export const RoadmapTimeline = ({
                       : 'bg-blue-600 text-white ring-4 ring-blue-600/20'
                   }`}
                 >
-                  {phaseCompleted ? <CheckCircle2 className="w-4 h-4" /> : phase.orderIndex}
+                  {phaseCompleted ? <CheckCircle2 className="w-4 h-4" /> : orderNum}
                 </div>
 
                 {/* Phase Container Card */}
                 <div className="p-6 rounded-3xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all space-y-5 shadow-lg">
                   {/* Top Bar: Title & Duration */}
                   <div
-                    onClick={() => togglePhaseExpand(phase.phaseId)}
+                    onClick={() => togglePhaseExpand(phaseId)}
                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer select-none"
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-bold text-purple-400 uppercase tracking-wider">
-                          Phase {phase.orderIndex}
+                          Phase {orderNum}
                         </span>
                         <span className="text-slate-600">•</span>
                         <span className="text-xs text-slate-400 flex items-center gap-1">
@@ -177,7 +180,7 @@ export const RoadmapTimeline = ({
                         </span>
                       </div>
                       <h4 className="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
-                        {phase.title}
+                        {phaseTitle}
                       </h4>
                     </div>
 
@@ -232,18 +235,18 @@ export const RoadmapTimeline = ({
                               >
                                 <div className="space-y-1 flex-1">
                                   <div className="flex items-center gap-2">
-                                    <span className="font-bold text-white">{res.name}</span>
+                                    <span className="font-bold text-white">{res.name || res.title}</span>
                                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-950 text-blue-300 border border-blue-900/60">
                                       {res.type}
                                     </span>
                                   </div>
                                   <p className="text-[11px] text-slate-400 leading-snug">
-                                    {res.description}
+                                    {res.description || 'Curated reference guide & documentation.'}
                                   </p>
                                 </div>
-                                {res.url && (
+                                {(res.url || res.resourceUrl) && (
                                   <a
-                                    href={res.url}
+                                    href={res.url || res.resourceUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="p-1.5 rounded-lg text-blue-400 hover:text-blue-300 hover:bg-slate-900 transition-colors flex-shrink-0"
@@ -307,7 +310,7 @@ export const RoadmapTimeline = ({
                           </span>
                           <div className="space-y-2">
                             {phase.milestones.map((m, mIdx) => {
-                              const stepKey = `${phase.phaseId}_m_${mIdx}`;
+                              const stepKey = `${phaseId}_m_${mIdx}`;
                               const isChecked = !!progress[stepKey];
 
                               return (

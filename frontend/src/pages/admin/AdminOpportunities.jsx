@@ -36,11 +36,13 @@ export const AdminOpportunities = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Moderate & remove this posting platform-wide?')) return;
+    setOpportunities((prev) => prev.filter((o) => o.id !== id));
     try {
       await adminApi.deleteOpportunity(id);
       fetchOpportunities(currentPage);
     } catch (err) {
       console.error('Failed to delete opportunity:', err);
+      fetchOpportunities(currentPage);
     }
   };
 

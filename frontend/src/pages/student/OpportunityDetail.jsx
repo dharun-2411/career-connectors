@@ -104,6 +104,7 @@ export const OpportunityDetail = () => {
       const res = await applicationApi.apply(id, coverLetter, effectiveResumeUrl, effectiveResumeName);
       if (res && res.success) {
         setApplySuccess(true);
+        setOpp((prev) => (prev ? { ...prev, hasApplied: true } : prev));
         fetchOpportunity();
       }
     } catch (err) {
@@ -468,9 +469,9 @@ export const OpportunityDetail = () => {
                 variant="primary"
                 size="md"
                 loading={applying}
-                disabled={!studentProfile?.resumeUrl || uploadingResume}
+                disabled={(!studentProfile?.resumeUrl && !tailoredResumeUrl) || uploadingResume}
               >
-                {!studentProfile?.resumeUrl ? 'Upload Resume to Apply' : 'Submit Application'}
+                {!studentProfile?.resumeUrl && !tailoredResumeUrl ? 'Upload Resume to Apply' : 'Submit Application'}
               </Button>
             </div>
           </form>

@@ -103,7 +103,9 @@ export const Opportunities = () => {
       const res = await applicationApi.apply(selectedOpp.id, coverLetter, effectiveResumeUrl, effectiveResumeName);
       if (res && res.success) {
         setApplySuccess(true);
-        // Refresh listings so state reflects applied
+        setOpportunities((prev) =>
+          prev.map((o) => (o.id === selectedOpp.id ? { ...o, hasApplied: true, applicantCount: (o.applicantCount || 0) + 1 } : o))
+        );
         fetchOpportunities(currentPage);
       }
     } catch (err) {
@@ -491,9 +493,9 @@ export const Opportunities = () => {
                 variant="primary"
                 size="md"
                 loading={applying}
-                disabled={!studentProfile?.resumeUrl || uploadingResume}
+                disabled={(!studentProfile?.resumeUrl && !tailoredResumeUrl) || uploadingResume}
               >
-                {!studentProfile?.resumeUrl ? 'Upload Resume to Apply' : 'Confirm Application'}
+                {!studentProfile?.resumeUrl && !tailoredResumeUrl ? 'Upload Resume to Apply' : 'Confirm Application'}
               </Button>
             </div>
           </form>

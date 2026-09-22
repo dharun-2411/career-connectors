@@ -34,6 +34,8 @@ export const ApplicantReview = () => {
   const [selectedApplicant, setSelectedApplicant] = useState(null);
   const [viewingResume, setViewingResume] = useState(null);
 
+  const currentOpp = opportunities.find((o) => String(o.id) === String(opportunityId));
+
   const handleOpenResume = (resumeUrl, candidateName, roleTitle = '') => {
     if (!resumeUrl) return;
     setViewingResume({

@@ -55,22 +55,29 @@ export const ManageOpportunities = () => {
 
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this opportunity?')) return;
+    setOpportunities((prev) => prev.filter((o) => o.id !== id));
     try {
       await companyApi.deleteOpportunity(id);
       fetchOpportunities(currentPage);
     } catch (err) {
       console.error('Failed to delete opportunity:', err);
+      fetchOpportunities(currentPage);
     }
   };
 
   const handleClosePosting = async (opp) => {
+    const nextStatus = opp.status === 'OPEN' ? 'CLOSED' : 'OPEN';
+    setOpportunities((prev) =>
+      prev.map((o) => (o.id === opp.id ? { ...o, status: nextStatus } : o))
+    );
     try {
       await companyApi.updateOpportunity(opp.id, {
-        status: opp.status === 'OPEN' ? 'CLOSED' : 'OPEN',
+        status: nextStatus,
       });
       fetchOpportunities(currentPage);
     } catch (err) {
       console.error('Failed to toggle status:', err);
+      fetchOpportunities(currentPage);
     }
   };
 

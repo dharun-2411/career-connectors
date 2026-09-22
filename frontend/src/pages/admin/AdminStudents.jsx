@@ -38,22 +38,28 @@ export const AdminStudents = () => {
   }, [search]);
 
   const handleToggleStatus = async (userId, currentStatus) => {
-    const nextStatus = currentStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+    const nextStatus = currentStatus === 'SUSPENDED' ? 'ACTIVE' : 'SUSPENDED';
+    setStudents((prev) =>
+      prev.map((s) => (s.userId === userId ? { ...s, status: nextStatus } : s))
+    );
     try {
       await adminApi.updateUserStatus(userId, nextStatus);
       fetchStudents(currentPage);
     } catch (err) {
       console.error('Failed to update status:', err);
+      fetchStudents(currentPage);
     }
   };
 
   const handleDelete = async (userId) => {
     if (!window.confirm('Are you sure you want to delete this student user?')) return;
+    setStudents((prev) => prev.filter((s) => s.userId !== userId));
     try {
       await adminApi.deleteUser(userId);
       fetchStudents(currentPage);
     } catch (err) {
       console.error('Failed to delete student:', err);
+      fetchStudents(currentPage);
     }
   };
 
@@ -93,9 +99,14 @@ export const AdminStudents = () => {
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-slate-300">
                 {students.map((st) => (
-                  <tr key={st.id} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={st.id || st.userId} className="hover:bg-slate-800/40 transition-colors">
                     <td className="p-4">
-                      <div className="font-bold text-white text-sm">{st.name}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-white text-sm">{st.name}</span>
+                        <Badge variant={st.status === 'SUSPENDED' ? 'danger' : 'success'} size="sm">
+                          {st.status || 'ACTIVE'}
+                        </Badge>
+                      </div>
                       <div className="text-slate-500 text-[11px]">{st.email}</div>
                     </td>
                     <td className="p-4">
@@ -120,14 +131,15 @@ export const AdminStudents = () => {
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
-                          variant="secondary"
+                          variant={st.status === 'SUSPENDED' ? 'success' : 'secondary'}
                           size="sm"
-                          onClick={() => handleToggleStatus(st.userId, 'ACTIVE')}
+                          onClick={() => handleToggleStatus(st.userId, st.status || 'ACTIVE')}
                         >
-                          Suspend
+                          {st.status === 'SUSPENDED' ? 'Activate' : 'Suspend'}
                         </Button>
                         <button
                           onClick={() => handleDelete(st.userId)}
+                          title="Delete User"
                           className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-950"
                         >
                           <Trash2 className="w-4 h-4" />

@@ -1,6 +1,7 @@
 package com.careerconnectors.dto.response;
 
 import com.careerconnectors.enums.Role;
+import com.careerconnectors.enums.VerificationStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,4 +20,6 @@ public class AuthResponse {
     private String email;
     private String name;
     private Role role;
+    private VerificationStatus verificationStatus;
 }
+

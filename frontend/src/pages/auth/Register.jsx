@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Sparkles, User, Briefcase, Mail, Lock, Building, GraduationCap, AlertCircle, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { Sparkles, User, Briefcase, Mail, Lock, Building, GraduationCap, AlertCircle, ArrowRight, ShieldCheck, Zap, Clock, CheckCircle2 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 
 export const Register = () => {
@@ -11,10 +11,12 @@ export const Register = () => {
   const [roleType, setRoleType] = useState('STUDENT'); // 'STUDENT', 'COMPANY', or 'ADMIN'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [companyPendingSuccess, setCompanyPendingSuccess] = useState(null);
 
   // Form fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [university, setUniversity] = useState('');
@@ -23,6 +25,7 @@ export const Register = () => {
   const [industry, setIndustry] = useState('');
   const [website, setWebsite] = useState('');
   const [location, setLocation] = useState('');
+  const [description, setDescription] = useState('');
   const [department, setDepartment] = useState('Platform Operations');
 
   const handleManualRegister = () => {
@@ -41,14 +44,25 @@ export const Register = () => {
       });
       navigate('/student/dashboard');
     } else if (roleType === 'COMPANY') {
-      loginManually('ROLE_COMPANY', {
-        email: targetEmail,
+      // Add to registered companies
+      const reg = JSON.parse(localStorage.getItem('registered_companies') || '[]');
+      const newId = Date.now();
+      reg.unshift({
+        id: newId,
+        userId: newId,
         name: targetName,
+        email: targetEmail,
+        password: password,
         industry: industry || 'Technology & Software',
         website: website || 'https://enterprise.example.com',
         location: location || 'San Francisco, CA',
+        description: description || 'Pioneering technology and innovative solutions.',
+        verificationStatus: 'PENDING',
+        documentsUrl: 'https://example.com/company_credentials.pdf',
+        createdAt: new Date().toISOString(),
       });
-      navigate('/company/dashboard');
+      localStorage.setItem('registered_companies', JSON.stringify(reg));
+      setCompanyPendingSuccess({ name: targetName, email: targetEmail });
     } else if (roleType === 'ADMIN') {
       loginManually('ROLE_ADMIN', {
         email: targetEmail,
@@ -62,6 +76,11 @@ export const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match. Please ensure both password fields match.');
+      return;
+    }
 
     if (roleType === 'ADMIN') {
       handleManualRegister();
@@ -83,15 +102,42 @@ export const Register = () => {
         });
         navigate('/student/dashboard');
       } else if (roleType === 'COMPANY') {
-        await registerCompany({
-          email,
-          password,
-          name,
-          industry,
-          website,
-          location,
+        try {
+          await registerCompany({
+            email,
+            password,
+            name,
+            industry,
+            website,
+            location,
+            description,
+          });
+        } catch (e) {
+          // If offline or fallback, ensure registered company is recorded with PENDING status
+          const reg = JSON.parse(localStorage.getItem('registered_companies') || '[]');
+          const newId = Date.now();
+          reg.unshift({
+            id: newId,
+            userId: newId,
+            name: name || 'Company Partner',
+            email: email,
+            password: password,
+            industry: industry || 'Technology & Software',
+            website: website || 'https://enterprise.example.com',
+            location: location || 'San Francisco, CA',
+            description: description || 'Pioneering technology and innovative solutions.',
+            verificationStatus: 'PENDING',
+            documentsUrl: 'https://example.com/company_credentials.pdf',
+            createdAt: new Date().toISOString(),
+          });
+          localStorage.setItem('registered_companies', JSON.stringify(reg));
+        }
+
+        // Show pending admin approval card
+        setCompanyPendingSuccess({
+          name: name || 'Your Company',
+          email: email,
         });
-        navigate('/company/dashboard');
       } else {
         handleManualRegister();
       }
@@ -106,7 +152,6 @@ export const Register = () => {
         err.message?.toLowerCase().includes('network');
 
       if (isFallback) {
-        // Seamlessly register and enter dashboard if backend returns 405, 500, or is offline
         handleManualRegister();
         return;
       }
@@ -131,7 +176,7 @@ export const Register = () => {
           </span>
         </Link>
         <h2 className="text-center text-2xl font-bold tracking-tight text-white">
-          Create your platform account
+          {companyPendingSuccess ? 'Registration Pending Review' : 'Create your platform account'}
         </h2>
         <p className="mt-2 text-center text-sm text-slate-400">
           Already registered?{' '}
@@ -143,7 +188,41 @@ export const Register = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-xl relative z-10">
         <div className="bg-slate-900 border border-slate-800 py-8 px-4 shadow-2xl rounded-2xl sm:px-10">
-          {/* Role selector tabs */}
+          {companyPendingSuccess ? (
+            <div className="space-y-6 text-center">
+              <div className="w-16 h-16 rounded-3xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400 shadow-xl shadow-amber-500/10">
+                <Clock className="w-8 h-8" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Company Registration Received</h3>
+                <p className="mt-2 text-sm text-slate-300 leading-relaxed">
+                  Thank you for registering <strong className="text-amber-300 font-semibold">{companyPendingSuccess.name}</strong> (<span className="text-slate-400">{companyPendingSuccess.email}</span>).
+                </p>
+                <div className="mt-4 p-4 rounded-xl bg-amber-950/40 border border-amber-800/50 text-xs text-amber-300/90 text-left space-y-2.5">
+                  <div className="font-semibold text-amber-200 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-amber-400" />
+                    Administrator Verification in Progress
+                  </div>
+                  <p className="leading-relaxed">
+                    For institutional trust & student safety, newly registered employer accounts must be reviewed and approved by a platform administrator.
+                  </p>
+                  <div className="p-2.5 rounded-lg bg-slate-950/60 border border-amber-900/40 text-slate-300 font-medium">
+                    📌 <strong>Access Policy:</strong> After the administrator approves your company registration in the Admin portal, you will be able to sign in and access the employer portal, manage candidate applications, and publish job postings.
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <Link to="/login" className="block w-full">
+                  <Button variant="primary" className="w-full justify-center bg-blue-600 hover:bg-blue-500 text-white py-2.5">
+                    Go to Sign In Page
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Role selector tabs */}
           <div className="grid grid-cols-3 gap-2 p-1.5 bg-slate-950 rounded-xl border border-slate-800 mb-8">
             <button
               type="button"
@@ -191,24 +270,24 @@ export const Register = () => {
           )}
 
           <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@domain.com"
-                    className="w-full pl-10 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
-                  />
-                </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                {roleType === 'COMPANY' ? 'Official Work / Company Email' : 'Email Address'}
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder={roleType === 'COMPANY' ? 'careers@mycompany.com' : 'name@domain.com'}
+                  className="w-full pl-10 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
+                />
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
                   Password
@@ -226,6 +305,24 @@ export const Register = () => {
                   />
                 </div>
               </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Re-enter password"
+                    className="w-full pl-10 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
+                  />
+                </div>
+              </div>
             </div>
 
             <div>
@@ -237,7 +334,7 @@ export const Register = () => {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder={roleType === 'STUDENT' ? 'Jane Doe' : roleType === 'COMPANY' ? 'Acme AI Technologies' : 'Platform Administrator'}
+                placeholder={roleType === 'STUDENT' ? 'Jane Doe' : roleType === 'COMPANY' ? 'Tesla Robotics Inc.' : 'Platform Administrator'}
                 className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
               />
             </div>
@@ -301,41 +398,58 @@ export const Register = () => {
 
             {/* Company Specific Fields */}
             {roleType === 'COMPANY' && (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Industry
-                  </label>
-                  <input
-                    type="text"
-                    value={industry}
-                    onChange={(e) => setIndustry(e.target.value)}
-                    placeholder="AI & Cloud"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 text-sm"
-                  />
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Industry
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={industry}
+                      onChange={(e) => setIndustry(e.target.value)}
+                      placeholder="e.g. AI & Robotics"
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Headquarters
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="e.g. Austin, TX"
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                      Website URL
+                    </label>
+                    <input
+                      type="url"
+                      value={website}
+                      onChange={(e) => setWebsite(e.target.value)}
+                      placeholder="https://acme.com"
+                      className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 text-sm"
+                    />
+                  </div>
                 </div>
+
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Location
+                    Company Overview / Bio
                   </label>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    placeholder="San Francisco, CA"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                    Website URL
-                  </label>
-                  <input
-                    type="url"
-                    value={website}
-                    onChange={(e) => setWebsite(e.target.value)}
-                    placeholder="https://acme.ai"
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 text-sm"
+                  <textarea
+                    rows={2}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Brief description of your company, mission, and the type of talent you hire..."
+                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 text-sm resize-none"
                   />
                 </div>
               </div>
@@ -367,6 +481,8 @@ export const Register = () => {
               Complete Registration <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
           </form>
+          </>
+          )}
         </div>
       </div>
     </div>

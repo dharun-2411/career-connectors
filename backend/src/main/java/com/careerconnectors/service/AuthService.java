@@ -111,6 +111,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .name(company.getName())
                 .role(user.getRole())
+                .verificationStatus(company.getVerificationStatus())
                 .build();
     }
 
@@ -129,6 +130,7 @@ public class AuthService {
 
         Long profileId = null;
         String name = "";
+        VerificationStatus verificationStatus = null;
 
         if (user.getRole() == Role.ROLE_STUDENT) {
             Student student = studentRepository.findByUser(user)
@@ -138,8 +140,12 @@ public class AuthService {
         } else if (user.getRole() == Role.ROLE_COMPANY) {
             Company company = companyRepository.findByUser(user)
                     .orElseThrow(() -> new ResourceNotFoundException("Company profile not found"));
+            if (company.getVerificationStatus() != VerificationStatus.VERIFIED) {
+                throw new BadRequestException("Your company account is pending administrator verification. Access will be granted once an administrator approves your company.");
+            }
             profileId = company.getId();
             name = company.getName();
+            verificationStatus = company.getVerificationStatus();
         } else if (user.getRole() == Role.ROLE_ADMIN) {
             Admin admin = adminRepository.findByUser(user)
                     .orElseThrow(() -> new ResourceNotFoundException("Admin profile not found"));
@@ -156,6 +162,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .name(name)
                 .role(user.getRole())
+                .verificationStatus(verificationStatus)
                 .build();
     }
 
@@ -166,6 +173,7 @@ public class AuthService {
 
         Long profileId = null;
         String name = "";
+        VerificationStatus verificationStatus = null;
 
         if (user.getRole() == Role.ROLE_STUDENT) {
             Student student = studentRepository.findByUser(user)
@@ -177,6 +185,7 @@ public class AuthService {
                     .orElseThrow(() -> new ResourceNotFoundException("Company profile not found"));
             profileId = company.getId();
             name = company.getName();
+            verificationStatus = company.getVerificationStatus();
         } else if (user.getRole() == Role.ROLE_ADMIN) {
             Admin admin = adminRepository.findByUser(user)
                     .orElseThrow(() -> new ResourceNotFoundException("Admin profile not found"));
@@ -193,6 +202,7 @@ public class AuthService {
                 .email(user.getEmail())
                 .name(name)
                 .role(user.getRole())
+                .verificationStatus(verificationStatus)
                 .build();
     }
 }
