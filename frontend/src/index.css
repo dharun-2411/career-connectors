@@ -4,52 +4,90 @@
 
 @layer base {
   body {
-    @apply bg-slate-950 text-slate-100 min-h-screen font-sans;
+    @apply bg-[#f8fafc] text-slate-800 min-h-screen font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 }
 
-/* Custom scrollbars */
+/* Custom Nexus Scrollbars */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  background: #f1f5f9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
+  background: #cbd5e1;
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: #94a3b8;
 }
 
-/* Glassmorphism card utilities */
+/* Nexus Card Utilities */
+.nexus-card {
+  @apply bg-white border border-slate-200/90 rounded-2xl shadow-sm transition-all duration-200;
+}
+
+.nexus-card-hover {
+  @apply bg-white border border-slate-200/90 rounded-2xl shadow-sm hover:shadow-md hover:border-indigo-300/80 transition-all duration-200;
+}
+
+.nexus-pill {
+  @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold;
+}
+
+.nexus-badge-indigo {
+  @apply bg-indigo-50 text-indigo-700 border border-indigo-200/70;
+}
+
+.nexus-badge-emerald {
+  @apply bg-emerald-50 text-emerald-700 border border-emerald-200/70;
+}
+
+.nexus-badge-amber {
+  @apply bg-amber-50 text-amber-700 border border-amber-200/70;
+}
+
+.nexus-badge-rose {
+  @apply bg-rose-50 text-rose-700 border border-rose-200/70;
+}
+
+.nexus-badge-purple {
+  @apply bg-purple-50 text-purple-700 border border-purple-200/70;
+}
+
+.nexus-badge-slate {
+  @apply bg-slate-100 text-slate-700 border border-slate-200;
+}
+
+/* Glassmorphism card utilities (light & crisp) */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.75);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.9);
 }
 
 .glass-panel-hover {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-panel-hover:hover {
-  background: rgba(30, 41, 59, 0.85);
-  border-color: rgba(12, 142, 233, 0.4);
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 15px -3px rgba(12, 142, 233, 0.15);
+  background: #ffffff;
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.08);
 }
 
 .gradient-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-400;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700;
 }
 
 .gradient-accent-text {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-purple-300 to-indigo-400;
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600;
 }
+

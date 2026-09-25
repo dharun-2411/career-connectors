@@ -12,7 +12,8 @@ export const aiApi = {
   },
 
   getSkillGap: async (opportunityId) => {
-    const response = await apiClient.get(`/ai/skill-gap/${opportunityId}`);
+    const url = opportunityId ? `/ai/skill-gap/${opportunityId}` : '/ai/skill-gap';
+    const response = await apiClient.get(url);
     return response.data;
   },
 

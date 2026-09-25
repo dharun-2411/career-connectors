@@ -7,9 +7,9 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, className = 
 
   return (
     <div className={`flex items-center justify-between py-4 ${className}`}>
-      <span className="text-sm text-slate-400">
-        Page <span className="font-semibold text-slate-200">{currentPage + 1}</span> of{' '}
-        <span className="font-semibold text-slate-200">{totalPages}</span>
+      <span className="text-xs font-medium text-slate-500">
+        Page <span className="font-bold text-slate-800">{currentPage + 1}</span> of{' '}
+        <span className="font-bold text-slate-800">{totalPages}</span>
       </span>
       <div className="flex items-center gap-2">
         <Button
@@ -34,3 +34,4 @@ export const Pagination = ({ currentPage, totalPages, onPageChange, className = 
     </div>
   );
 };
+

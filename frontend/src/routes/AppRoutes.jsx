@@ -50,6 +50,7 @@ export const AppRoutes = () => {
           <Route path="/student/roadmap" element={<CareerRoadmap />} />
           <Route path="/student/profile" element={<StudentProfile />} />
           <Route path="/student/applications" element={<Applications />} />
+          <Route path="/student/skill-gap" element={<SkillGap />} />
           <Route path="/student/skill-gap/:id" element={<SkillGap />} />
           <Route path="/student/recommendations" element={<AIRecommendations />} />
           <Route path="/student/career-suggestions" element={<CareerSuggestions />} />

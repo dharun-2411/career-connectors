@@ -224,77 +224,286 @@ const setStore = (key, val) => {
   localStorage.setItem(key, JSON.stringify(val));
 };
 
+// Dynamic AI Match Calculator
+const calculateDynamicMatch = (studentSkills = [], opportunity = {}, studentProfile = {}) => {
+  const oppSkills = opportunity.requiredSkills || [];
+  if (oppSkills.length === 0) {
+    return {
+      matchScore: 82.0,
+      matchedSkills: [],
+      missingSkills: [],
+      matchReason: 'Solid entry-level match based on your academic background.',
+      keyStrengths: ['Relevant university coursework', 'Problem-solving fundamentals'],
+    };
+  }
+
+  const normalizedStudentSkills = studentSkills.map((s) => ({
+    ...s,
+    normalizedName: (s.skillName || '').toLowerCase().trim().replace(/[\.\-_]/g, ''),
+  }));
+
+  const profWeights = {
+    BEGINNER: 1,
+    INTERMEDIATE: 2,
+    ADVANCED: 3,
+    EXPERT: 4,
+  };
+
+  let totalWeight = 0;
+  let earnedScore = 0;
+  const matched = [];
+  const missing = [];
+
+  oppSkills.forEach((reqSkill) => {
+    const reqWeight = reqSkill.weightage || 1.5;
+    totalWeight += reqWeight;
+
+    const reqNorm = (reqSkill.skillName || '').toLowerCase().trim().replace(/[\.\-_]/g, '');
+    const found = normalizedStudentSkills.find(
+      (s) =>
+        s.normalizedName === reqNorm ||
+        s.normalizedName.includes(reqNorm) ||
+        reqNorm.includes(s.normalizedName)
+    );
+
+    if (found) {
+      const studentLevel = profWeights[found.proficiencyLevel] || 2;
+      const reqLevel = profWeights[reqSkill.requiredProficiency] || 2;
+      const ratio = Math.min(1.0, studentLevel >= reqLevel ? 1.0 : studentLevel / reqLevel);
+      earnedScore += reqWeight * ratio;
+
+      matched.push({
+        skillName: reqSkill.skillName,
+        category: reqSkill.category || found.category || 'General',
+        proficiency: found.proficiencyLevel || 'INTERMEDIATE',
+        isSatisfied: studentLevel >= reqLevel,
+      });
+    } else {
+      missing.push({
+        skillName: reqSkill.skillName,
+        category: reqSkill.category || 'Competency',
+        requiredProficiency: reqSkill.requiredProficiency || 'INTERMEDIATE',
+        currentProficiency: 'None',
+        priority: reqWeight >= 1.5 ? 'HIGH' : 'MEDIUM',
+        weightage: reqWeight,
+      });
+    }
+  });
+
+  // Base raw score
+  let baseScore = totalWeight > 0 ? (earnedScore / totalWeight) * 100 : 70;
+
+  // Bonus for attached resume & complete profile
+  if (studentProfile.resumeUrl || studentProfile.resumeFileName) {
+    baseScore = Math.min(99, baseScore + 4);
+  }
+  if (studentProfile.university) {
+    baseScore = Math.min(99, baseScore + 2);
+  }
+
+  const finalScore = Math.max(38, Math.min(98, Math.round(baseScore * 10) / 10));
+
+  // Dynamic match reason & key strengths
+  const matchedNames = matched.map((m) => m.skillName);
+  let matchReason = '';
+  if (matchedNames.length > 0) {
+    matchReason = `Exceptional alignment with your ${matchedNames.slice(0, 3).join(', ')} proficiency.`;
+  } else {
+    matchReason = `Growth opportunity matching foundational engineering skills for ${opportunity.title}.`;
+  }
+
+  const keyStrengths =
+    matched.length > 0
+      ? matched.map((m) => `Verified ${m.proficiency.toLowerCase()} level in ${m.skillName}`)
+      : ['Foundational problem solving', 'Relevant coursework'];
+
+  return {
+    matchScore: finalScore,
+    matchedSkills: matched,
+    missingSkills: missing,
+    matchReason,
+    keyStrengths,
+  };
+};
+
 // Stateful Mock Fallback Generator
 const getMockDataForUrl = (url, method, requestData) => {
   const cleanUrl = url.split('?')[0];
   const httpMethod = (method || 'GET').toUpperCase();
   const parsedData = typeof requestData === 'string' ? JSON.parse(requestData || '{}') : requestData || {};
   const savedUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const userKey = savedUser.email ? savedUser.email.toLowerCase().trim() : savedUser.userId || 'default';
 
-  // --- 1. STUDENT PROFILE & SKILLS ---
+  // --- 0. AUTH LOGIN & REGISTER HANDLERS ---
+  if (cleanUrl.includes('/auth/register/student')) {
+    const cleanEmail = (parsedData.email || '').toLowerCase().trim();
+    const newStudent = {
+      userId: Date.now(),
+      profileId: Date.now(),
+      email: cleanEmail,
+      name: parsedData.name || 'Student Member',
+      role: 'ROLE_STUDENT',
+      university: parsedData.university || 'University',
+      education: parsedData.education || 'Computer Science',
+      graduationYear: parseInt(parsedData.graduationYear, 10) || 2025,
+      phone: parsedData.phone || '',
+      bio: parsedData.bio || 'Motivated student eager to apply technical skills in high-impact projects.',
+      githubUrl: parsedData.githubUrl || '',
+      linkedinUrl: parsedData.linkedinUrl || '',
+      portfolioUrl: parsedData.portfolioUrl || '',
+      resumeUrl: parsedData.resumeUrl || '',
+      resumeFileName: parsedData.resumeFileName || '',
+    };
+
+    // Save into registered students list
+    const registered = getStore('registered_students', []);
+    const existingIdx = registered.findIndex((s) => s.email?.toLowerCase() === cleanEmail);
+    if (existingIdx >= 0) {
+      registered[existingIdx] = { ...registered[existingIdx], ...newStudent };
+    } else {
+      registered.unshift(newStudent);
+    }
+    setStore('registered_students', registered);
+
+    // Initialize user profile
+    setStore(`student_profile_${cleanEmail}`, newStudent);
+
+    // Initialize initial default skills for new student
+    const defaultStarterSkills = [
+      { id: Date.now() + 1, skillId: Date.now() + 1, skillName: 'Java', category: 'Programming', proficiencyLevel: 'ADVANCED', source: 'MANUAL', isVerified: true },
+      { id: Date.now() + 2, skillId: Date.now() + 2, skillName: 'Spring Boot', category: 'Framework', proficiencyLevel: 'ADVANCED', source: 'MANUAL', isVerified: true },
+      { id: Date.now() + 3, skillId: Date.now() + 3, skillName: 'React.js', category: 'Framework', proficiencyLevel: 'INTERMEDIATE', source: 'MANUAL', isVerified: true },
+      { id: Date.now() + 4, skillId: Date.now() + 4, skillName: 'PostgreSQL', category: 'Database', proficiencyLevel: 'INTERMEDIATE', source: 'MANUAL', isVerified: true },
+    ];
+    setStore(`student_skills_${cleanEmail}`, defaultStarterSkills);
+
+    const authResponse = {
+      token: `token_${Date.now()}`,
+      tokenType: 'Bearer',
+      ...newStudent,
+    };
+    setStore('user', authResponse);
+    return authResponse;
+  }
+
+  if (cleanUrl.includes('/auth/login')) {
+    const cleanEmail = (parsedData.email || '').toLowerCase().trim();
+    const registered = getStore('registered_students', []);
+    const matched = registered.find((s) => s.email?.toLowerCase() === cleanEmail);
+
+    let userName = matched?.name;
+    if (!userName) {
+      const emailPrefix = cleanEmail.split('@')[0].replace(/[._]/g, ' ');
+      userName =
+        emailPrefix
+          .split(' ')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ') || 'Student Member';
+    }
+
+    const authResponse = {
+      token: `token_${Date.now()}`,
+      tokenType: 'Bearer',
+      userId: matched?.userId || Date.now(),
+      profileId: matched?.profileId || Date.now(),
+      email: cleanEmail,
+      name: userName,
+      role: cleanEmail.includes('admin') ? 'ROLE_ADMIN' : cleanEmail.includes('company') || cleanEmail.includes('recruiter') ? 'ROLE_COMPANY' : 'ROLE_STUDENT',
+      university: matched?.university || 'University of Washington',
+      education: matched?.education || 'B.S. Computer Science',
+      graduationYear: matched?.graduationYear || 2025,
+      phone: matched?.phone || '',
+      bio: matched?.bio || '',
+      resumeUrl: matched?.resumeUrl || '',
+      resumeFileName: matched?.resumeFileName || '',
+    };
+    setStore('user', authResponse);
+    return authResponse;
+  }
+
+  if (cleanUrl.includes('/auth/me')) {
+    return savedUser;
+  }
+
+  // --- 1. STUDENT PROFILE & SKILLS (SCOPED TO LOGGED IN USER) ---
   if (cleanUrl.endsWith('/student/profile')) {
+    const profileKey = `student_profile_${userKey}`;
+    const skillsKey = `student_skills_${userKey}`;
+
     if (httpMethod === 'PUT' || httpMethod === 'POST') {
-      const currentProfile = getStore('student_profile', {
+      const currentProfile = getStore(profileKey, {
         id: savedUser.profileId || 101,
         userId: savedUser.userId || 101,
-        name: savedUser.name || 'Alex Chen',
-        email: savedUser.email || 'alex.chen@university.edu',
-        phone: savedUser.phone || '+1 (555) 234-5678',
+        name: savedUser.name || 'Student Member',
+        email: savedUser.email || 'student@university.edu',
+        phone: savedUser.phone || '',
         dob: '2002-05-14',
         education: savedUser.education || 'B.S. Computer Science',
         university: savedUser.university || 'University of Washington',
         graduationYear: savedUser.graduationYear || 2025,
-        bio: savedUser.bio || 'Passionate full-stack developer with experience building modern web apps and scalable cloud services.',
-        githubUrl: savedUser.githubUrl || 'https://github.com/alexchen',
-        linkedinUrl: savedUser.linkedinUrl || 'https://linkedin.com/in/alexchen',
-        portfolioUrl: savedUser.portfolioUrl || 'https://alexchen.dev',
+        bio: savedUser.bio || 'Passionate software engineer building modern applications and AI systems.',
+        githubUrl: savedUser.githubUrl || '',
+        linkedinUrl: savedUser.linkedinUrl || '',
+        portfolioUrl: savedUser.portfolioUrl || '',
         resumeUrl: savedUser.resumeUrl || '',
-        resumeFileName: savedUser.resumeFileName || 'Alex_Chen_Resume.pdf',
+        resumeFileName: savedUser.resumeFileName || '',
       });
       const updated = { ...currentProfile, ...parsedData };
-      setStore('student_profile', updated);
-      // Sync user
+      setStore(profileKey, updated);
+      
+      // Sync into user session & registered students list
       const updatedUser = { ...savedUser, ...updated };
       setStore('user', updatedUser);
+
+      const registered = getStore('registered_students', []);
+      const idx = registered.findIndex((s) => s.email?.toLowerCase() === userKey);
+      if (idx >= 0) {
+        registered[idx] = { ...registered[idx], ...updated };
+        setStore('registered_students', registered);
+      }
+
       return updated;
     }
 
-    const currentProfile = getStore('student_profile', {
+    const currentProfile = getStore(profileKey, {
       id: savedUser.profileId || 101,
       userId: savedUser.userId || 101,
-      name: savedUser.name || 'Alex Chen',
-      email: savedUser.email || 'alex.chen@university.edu',
-      phone: savedUser.phone || '+1 (555) 234-5678',
+      name: savedUser.name || 'Student Member',
+      email: savedUser.email || 'student@university.edu',
+      phone: savedUser.phone || '',
       dob: '2002-05-14',
       education: savedUser.education || 'B.S. Computer Science',
       university: savedUser.university || 'University of Washington',
       graduationYear: savedUser.graduationYear || 2025,
-      bio: savedUser.bio || 'Passionate full-stack developer with experience building modern web apps and scalable cloud services.',
-      githubUrl: savedUser.githubUrl || 'https://github.com/alexchen',
-      linkedinUrl: savedUser.linkedinUrl || 'https://linkedin.com/in/alexchen',
-      portfolioUrl: savedUser.portfolioUrl || 'https://alexchen.dev',
+      bio: savedUser.bio || 'Passionate software engineer building modern applications and AI systems.',
+      githubUrl: savedUser.githubUrl || '',
+      linkedinUrl: savedUser.linkedinUrl || '',
+      portfolioUrl: savedUser.portfolioUrl || '',
       resumeUrl: savedUser.resumeUrl || '',
-      resumeFileName: savedUser.resumeFileName || 'Alex_Chen_Resume.pdf',
+      resumeFileName: savedUser.resumeFileName || '',
     });
 
-    const skills = getStore('student_skills', [
+    const defaultSkills = [
       { id: 1, skillId: 1, skillName: 'Java', category: 'Programming', proficiencyLevel: 'ADVANCED', source: 'MANUAL', isVerified: true },
       { id: 2, skillId: 2, skillName: 'Spring Boot', category: 'Framework', proficiencyLevel: 'ADVANCED', source: 'MANUAL', isVerified: true },
       { id: 3, skillId: 3, skillName: 'React.js', category: 'Framework', proficiencyLevel: 'INTERMEDIATE', source: 'MANUAL', isVerified: true },
       { id: 4, skillId: 4, skillName: 'PostgreSQL', category: 'Database', proficiencyLevel: 'INTERMEDIATE', source: 'MANUAL', isVerified: true },
-    ]);
+    ];
+    const skills = getStore(skillsKey, defaultSkills);
 
     return { ...currentProfile, skills };
   }
 
-  // Skills CRUD
+  // Skills CRUD (SCOPED TO LOGGED IN USER)
   if (cleanUrl.includes('/student/skills')) {
-    let skills = getStore('student_skills', [
+    const skillsKey = `student_skills_${userKey}`;
+    const defaultSkills = [
       { id: 1, skillId: 1, skillName: 'Java', category: 'Programming', proficiencyLevel: 'ADVANCED', source: 'MANUAL', isVerified: true },
       { id: 2, skillId: 2, skillName: 'Spring Boot', category: 'Framework', proficiencyLevel: 'ADVANCED', source: 'MANUAL', isVerified: true },
       { id: 3, skillId: 3, skillName: 'React.js', category: 'Framework', proficiencyLevel: 'INTERMEDIATE', source: 'MANUAL', isVerified: true },
       { id: 4, skillId: 4, skillName: 'PostgreSQL', category: 'Database', proficiencyLevel: 'INTERMEDIATE', source: 'MANUAL', isVerified: true },
-    ]);
+    ];
+    let skills = getStore(skillsKey, defaultSkills);
 
     if (httpMethod === 'POST') {
       const newSkill = {
@@ -307,7 +516,7 @@ const getMockDataForUrl = (url, method, requestData) => {
         isVerified: true,
       };
       skills.push(newSkill);
-      setStore('student_skills', skills);
+      setStore(skillsKey, skills);
       return newSkill;
     }
 
@@ -315,7 +524,7 @@ const getMockDataForUrl = (url, method, requestData) => {
       const parts = cleanUrl.split('/');
       const skillId = parts[parts.length - 1];
       skills = skills.filter((s) => String(s.id) !== String(skillId) && String(s.skillId) !== String(skillId));
-      setStore('student_skills', skills);
+      setStore(skillsKey, skills);
       return { success: true, message: 'Skill removed' };
     }
 
@@ -326,7 +535,7 @@ const getMockDataForUrl = (url, method, requestData) => {
       if (match) {
         const sId = match[1];
         skills = skills.map((s) => (String(s.id) === String(sId) || String(s.skillId) === String(sId) ? { ...s, proficiencyLevel: prof } : s));
-        setStore('student_skills', skills);
+        setStore(skillsKey, skills);
       }
       return { success: true, message: 'Proficiency updated' };
     }
@@ -798,82 +1007,152 @@ const getMockDataForUrl = (url, method, requestData) => {
   }
 
   if (cleanUrl.includes('/ai/matching')) {
+    const oppMatch = cleanUrl.match(/\/ai\/matching\/(\d+)/);
+    const oppId = oppMatch ? Number(oppMatch[1]) : 1;
+    const allOpps = getStore('all_opportunities', INITIAL_OPPORTUNITIES);
+    const targetOpp = allOpps.find((o) => o.id === oppId) || allOpps[0];
+
+    const profileKey = `student_profile_${userKey}`;
+    const skillsKey = `student_skills_${userKey}`;
+    const currentProfile = getStore(profileKey, savedUser);
+    const currentSkills = getStore(skillsKey, [
+      { id: 1, skillName: 'Java', category: 'Programming', proficiencyLevel: 'ADVANCED' },
+      { id: 2, skillName: 'Spring Boot', category: 'Framework', proficiencyLevel: 'ADVANCED' },
+      { id: 3, skillName: 'React.js', category: 'Framework', proficiencyLevel: 'INTERMEDIATE' },
+      { id: 4, skillName: 'PostgreSQL', category: 'Database', proficiencyLevel: 'INTERMEDIATE' },
+    ]);
+
+    const result = calculateDynamicMatch(currentSkills, targetOpp, currentProfile);
     return {
-      matchScore: 88.5,
-      overallScore: 88.5,
-      matchedSkills: ['Java', 'React.js', 'Spring Boot', 'PostgreSQL'],
-      missingSkills: ['Kubernetes', 'GraphQL'],
-      summary: 'Strong skill alignment with core full-stack requirements.',
-      explanation: 'Candidate demonstrates strong competency across foundational full-stack requirements including Java, Spring Boot, and React.',
+      matchScore: result.matchScore,
+      overallScore: result.matchScore,
+      matchedSkills: result.matchedSkills.map((m) => m.skillName),
+      missingSkills: result.missingSkills.map((m) => m.skillName),
+      summary: result.matchReason,
+      explanation: `Calculated semantic compatibility across ${currentSkills.length} verified profile skills for ${targetOpp.title}.`,
     };
   }
 
   if (cleanUrl.includes('/ai/skill-gap')) {
+    const oppMatch = cleanUrl.match(/\/ai\/skill-gap\/(\d+)/);
+    const oppId = oppMatch ? Number(oppMatch[1]) : 1;
+    const allOpps = getStore('all_opportunities', INITIAL_OPPORTUNITIES);
+    const targetOpp = allOpps.find((o) => o.id === oppId) || allOpps[0];
+
+    const profileKey = `student_profile_${userKey}`;
+    const skillsKey = `student_skills_${userKey}`;
+    const currentProfile = getStore(profileKey, savedUser);
+    const currentSkills = getStore(skillsKey, [
+      { id: 1, skillName: 'Java', category: 'Programming', proficiencyLevel: 'ADVANCED' },
+      { id: 2, skillName: 'Spring Boot', category: 'Framework', proficiencyLevel: 'ADVANCED' },
+      { id: 3, skillName: 'React.js', category: 'Framework', proficiencyLevel: 'INTERMEDIATE' },
+      { id: 4, skillName: 'PostgreSQL', category: 'Database', proficiencyLevel: 'INTERMEDIATE' },
+    ]);
+
+    const result = calculateDynamicMatch(currentSkills, targetOpp, currentProfile);
+
+    // Dynamic curriculum generation for missing skills
+    const roadmap = result.missingSkills.map((sk) => {
+      const sName = sk.skillName;
+      let title = `Mastering ${sName} for Production Engineering`;
+      let type = 'Course';
+      let time = '1-2 Weeks';
+      let diff = 'Intermediate';
+      let url = 'https://developer.mozilla.org/';
+
+      if (sName.toLowerCase().includes('docker') || sName.toLowerCase().includes('container')) {
+        title = 'Docker & Multi-Stage Containers for Microservices';
+        type = 'Hands-on Lab';
+        time = '1 Week';
+        diff = 'Intermediate';
+        url = 'https://docs.docker.com/get-started/';
+      } else if (sName.toLowerCase().includes('vector') || sName.toLowerCase().includes('pgvector')) {
+        title = 'PostgreSQL Vector Search & Embeddings Integration';
+        type = 'Course';
+        time = '1 Week';
+        diff = 'Intermediate';
+        url = 'https://github.com/pgvector/pgvector';
+      } else if (sName.toLowerCase().includes('k8s') || sName.toLowerCase().includes('kubernetes')) {
+        title = 'Kubernetes 101: Pods, Services, and Deployments';
+        type = 'Interactive Lab';
+        time = '2 Weeks';
+        diff = 'Intermediate';
+        url = 'https://kubernetes.io/docs/tutorials/';
+      } else if (sName.toLowerCase().includes('python')) {
+        title = 'High-Performance Python & Vector Computing';
+        type = 'Course';
+        time = '2 Weeks';
+        diff = 'Advanced';
+        url = 'https://realpython.com/';
+      } else if (sName.toLowerCase().includes('aws') || sName.toLowerCase().includes('cloud')) {
+        title = 'AWS Cloud Architecture & Microservices Deployment';
+        type = 'Tutorial';
+        time = '2 Weeks';
+        diff = 'Intermediate';
+        url = 'https://aws.amazon.com/getting-started/';
+      }
+
+      return {
+        skill: sName,
+        title,
+        type,
+        estimatedTimeToLearn: time,
+        difficulty: diff,
+        resourceUrl: url,
+      };
+    });
+
     return {
-      opportunityId: 1,
-      opportunityTitle: 'Full Stack AI Engineering Intern',
-      companyName: 'Nexus AI Technologies',
-      matchPercentage: 88.5,
-      summary: 'Strong skill alignment with core full-stack requirements, with high potential in cloud containerization.',
-      missingSkills: [
+      opportunityId: targetOpp.id,
+      opportunityTitle: targetOpp.title,
+      companyName: targetOpp.companyName,
+      matchPercentage: result.matchScore,
+      summary: result.matchReason,
+      matchedSkills: result.matchedSkills,
+      missingSkills: result.missingSkills,
+      learningRoadmap: roadmap.length > 0 ? roadmap : [
         {
-          skillName: 'Docker Containerization',
-          category: 'Cloud/DevOps',
-          requiredProficiency: 'INTERMEDIATE',
-          currentProficiency: 'BEGINNER',
-          priority: 'HIGH',
-          weightage: 1.5,
-        },
-        {
-          skillName: 'pgvector Cosine Search',
-          category: 'Database',
-          requiredProficiency: 'INTERMEDIATE',
-          currentProficiency: null,
-          priority: 'MEDIUM',
-          weightage: 1.0,
-        },
-      ],
-      learningRoadmap: [
-        {
-          skill: 'Docker Containerization',
-          title: 'Docker & Multi-Stage Containers for Microservices',
-          type: 'Tutorial',
-          estimatedTimeToLearn: '1-2 Weeks',
-          difficulty: 'Intermediate',
-          resourceUrl: 'https://docs.docker.com/get-started/',
-        },
-        {
-          skill: 'pgvector Cosine Search',
-          title: 'PostgreSQL Vector Search & Embeddings Integration',
+          skill: 'Advanced System Architecture',
+          title: 'Deep-dive into Production Microservices & Scalability',
           type: 'Course',
-          estimatedTimeToLearn: '1 Week',
-          difficulty: 'Intermediate',
-          resourceUrl: 'https://github.com/pgvector/pgvector',
+          estimatedTimeToLearn: '1-2 Weeks',
+          difficulty: 'Advanced',
+          resourceUrl: 'https://martinfowler.com/microservices/',
         },
       ],
     };
   }
 
   if (cleanUrl.includes('/ai/career-suggestions') || cleanUrl.includes('/ai/career')) {
+    const profileKey = `student_profile_${userKey}`;
+    const skillsKey = `student_skills_${userKey}`;
+    const currentSkills = getStore(skillsKey, [
+      { id: 1, skillName: 'Java', category: 'Programming', proficiencyLevel: 'ADVANCED' },
+      { id: 2, skillName: 'Spring Boot', category: 'Framework', proficiencyLevel: 'ADVANCED' },
+      { id: 3, skillName: 'React.js', category: 'Framework', proficiencyLevel: 'INTERMEDIATE' },
+      { id: 4, skillName: 'PostgreSQL', category: 'Database', proficiencyLevel: 'INTERMEDIATE' },
+    ]);
+    const skillNames = currentSkills.map((s) => s.skillName);
+
     return {
-      studentId: 101,
-      trendingSkillsInMarket: ['Generative AI', 'Spring Boot 3', 'LangGraph', 'React 18', 'Kubernetes', 'pgvector'],
+      studentId: savedUser.userId || 101,
+      trendingSkillsInMarket: ['Generative AI', 'Spring Boot 3', 'LangGraph', 'React 18', 'Kubernetes', 'pgvector', 'Docker', 'FastAPI'],
       suggestedPaths: [
         {
           roleTitle: 'Full-Stack AI Application Engineer',
           industry: 'Enterprise Software & Artificial Intelligence',
           readinessLevel: 'High',
           avgMarketDemand: 'Very High',
-          transferrableSkills: ['Java', 'Spring Boot', 'React.js', 'PostgreSQL'],
-          recommendedNextSkills: ['Docker', 'Vector Embeddings', 'FastAPI'],
+          transferrableSkills: skillNames.slice(0, 4),
+          recommendedNextSkills: ['Docker Containerization', 'Vector Search (pgvector)', 'LangGraph Orchestration'],
         },
         {
           roleTitle: 'Cloud Backend Microservices Specialist',
           industry: 'Cloud Infrastructure & Distributed Systems',
           readinessLevel: 'High',
           avgMarketDemand: 'High',
-          transferrableSkills: ['Java', 'Spring Boot', 'Relational Databases'],
-          recommendedNextSkills: ['Kubernetes', 'Kafka', 'Redis Caching'],
+          transferrableSkills: skillNames.filter((s) => !s.toLowerCase().includes('react')).slice(0, 3),
+          recommendedNextSkills: ['Kubernetes Orchestration', 'Distributed Tracing (OpenTelemetry)', 'Redis Caching'],
         },
       ],
       recommendedProjects: [
@@ -881,7 +1160,7 @@ const getMockDataForUrl = (url, method, requestData) => {
           title: 'Real-Time Semantic Job Matcher with pgvector',
           description: 'Build a production-grade candidate matching service with Spring Boot, PostgreSQL vector embeddings, and React frontend.',
           difficulty: 'Intermediate',
-          technologiesUsed: ['Java 21', 'Spring Boot', 'pgvector', 'React.js'],
+          technologiesUsed: skillNames.slice(0, 3).concat(['pgvector']),
           portfolioImpact: 'Demonstrates deep mastery of modern full-stack development and semantic vector search integration.',
         },
         {
@@ -900,44 +1179,34 @@ const getMockDataForUrl = (url, method, requestData) => {
   }
 
   if (cleanUrl.includes('/ai/recommendations') || cleanUrl.includes('/ai/')) {
+    const allOpps = getStore('all_opportunities', INITIAL_OPPORTUNITIES);
+    const profileKey = `student_profile_${userKey}`;
+    const skillsKey = `student_skills_${userKey}`;
+    const currentProfile = getStore(profileKey, savedUser);
+    const currentSkills = getStore(skillsKey, [
+      { id: 1, skillName: 'Java', category: 'Programming', proficiencyLevel: 'ADVANCED' },
+      { id: 2, skillName: 'Spring Boot', category: 'Framework', proficiencyLevel: 'ADVANCED' },
+      { id: 3, skillName: 'React.js', category: 'Framework', proficiencyLevel: 'INTERMEDIATE' },
+      { id: 4, skillName: 'PostgreSQL', category: 'Database', proficiencyLevel: 'INTERMEDIATE' },
+    ]);
+
+    const scoredRecommendations = allOpps.map((opp) => {
+      const match = calculateDynamicMatch(currentSkills, opp, currentProfile);
+      return {
+        opportunity: opp,
+        matchScore: match.matchScore,
+        matchReason: match.matchReason,
+        careerTrajectoryFit: match.matchScore >= 85 ? 'High Growth Synergy' : 'Skill Expansion Target',
+        keyStrengths: match.keyStrengths,
+      };
+    });
+
+    // Sort descending by match score
+    scoredRecommendations.sort((a, b) => b.matchScore - a.matchScore);
+
     return {
-      studentId: 101,
-      recommendations: [
-        {
-          opportunity: {
-            id: 1,
-            title: 'Full Stack AI Engineering Intern',
-            companyName: 'Nexus AI Technologies',
-            companyLogoUrl: '',
-            location: 'San Francisco, CA',
-            isRemote: true,
-            type: 'INTERNSHIP',
-            stipend: '$5,500 / month',
-            description: 'Build responsive web apps, REST APIs with Spring Boot, and integrate intelligent vector search agents into production workflows.',
-          },
-          matchScore: 92.0,
-          matchReason: 'Exceptional alignment with your Java, Spring Boot, and React proficiency levels.',
-          careerTrajectoryFit: 'High Growth Synergy',
-          keyStrengths: ['Core Java 21 proficiency', 'React component architecture', 'Relational data modeling'],
-        },
-        {
-          opportunity: {
-            id: 2,
-            title: 'Junior Cloud Backend Engineer',
-            companyName: 'CloudScale Systems',
-            companyLogoUrl: '',
-            location: 'Seattle, WA',
-            isRemote: false,
-            type: 'FULL_TIME',
-            stipend: '$95,000 - $115,000 / year',
-            description: 'Design distributed microservices, deploy Dockerized containers, and optimize high-throughput PostgreSQL pipelines.',
-          },
-          matchScore: 86.0,
-          matchReason: 'Strong alignment with your PostgreSQL schema design and backend Spring Boot skills.',
-          careerTrajectoryFit: 'Cloud Infrastructure Path',
-          keyStrengths: ['PostgreSQL optimization', 'Spring Boot REST APIs'],
-        },
-      ],
+      studentId: savedUser.userId || 101,
+      recommendations: scoredRecommendations,
     };
   }
 
@@ -1042,17 +1311,75 @@ const getMockDataForUrl = (url, method, requestData) => {
   // --- 8. AUTHENTICATION (LOGIN & REGISTRATION FALLBACK) ---
   if (cleanUrl.includes('/auth/register/company')) {
     const regCompanies = getStore('registered_companies', []);
+    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
+    const targetEmail = (parsedData.email || '').toLowerCase().trim();
+    const targetName = parsedData.name || 'Company Partner';
+
+    const existingComp = regCompanies.find((c) => c.email?.toLowerCase() === targetEmail);
+    const isApproved =
+      verifiedCompanies.includes(targetEmail) ||
+      (existingComp && (verifiedCompanies.includes(String(existingComp.id)) || existingComp.verificationStatus === 'VERIFIED'));
+    const isRejected = existingComp && existingComp.verificationStatus === 'REJECTED';
+
+    if (existingComp) {
+      if (isApproved) {
+        const error = new Error(`Company "${existingComp.name || targetName}" is already registered and approved by the platform administrator. Please sign in to your recruiter account.`);
+        error.response = {
+          status: 409,
+          data: {
+            success: false,
+            message: `Company "${existingComp.name || targetName}" is already registered and approved by the platform administrator. Please sign in to your recruiter account.`,
+            statusType: 'ALREADY_APPROVED',
+            companyName: existingComp.name || targetName,
+            email: targetEmail,
+          },
+        };
+        throw error;
+      }
+
+      if (isRejected) {
+        const error = new Error(`The registration for "${existingComp.name || targetName}" was previously reviewed and declined by the platform administrator. Please contact support@careerconnectors.dev.`);
+        error.response = {
+          status: 403,
+          data: {
+            success: false,
+            message: `The registration for "${existingComp.name || targetName}" was previously reviewed and declined by the platform administrator. Please contact support@careerconnectors.dev.`,
+            statusType: 'REJECTED',
+            isRejected: true,
+            companyName: existingComp.name || targetName,
+            email: targetEmail,
+          },
+        };
+        throw error;
+      }
+
+      const error = new Error(`A registration request for "${existingComp.name || targetName}" is already submitted and pending administrator review.`);
+      error.response = {
+        status: 409,
+        data: {
+          success: false,
+          message: `A registration request for "${existingComp.name || targetName}" is already submitted and pending administrator review.`,
+          statusType: 'ALREADY_PENDING',
+          isPendingApproval: true,
+          companyName: existingComp.name || targetName,
+          email: targetEmail,
+        },
+      };
+      throw error;
+    }
+
     const newId = Date.now();
     const newComp = {
       id: newId,
       userId: newId,
       profileId: newId,
-      name: parsedData.name || 'Company Partner',
-      email: (parsedData.email || '').toLowerCase().trim(),
+      name: targetName,
+      email: targetEmail,
       password: parsedData.password,
       industry: parsedData.industry || 'Technology & Software',
       website: parsedData.website || 'https://enterprise.example.com',
       location: parsedData.location || 'San Francisco, CA',
+      description: parsedData.description || 'Pioneering technology and innovative solutions.',
       verificationStatus: 'PENDING',
       role: 'ROLE_COMPANY',
       documentsUrl: 'https://example.com/company_credentials.pdf',
@@ -1069,6 +1396,7 @@ const getMockDataForUrl = (url, method, requestData) => {
       name: newComp.name,
       role: 'ROLE_COMPANY',
       verificationStatus: 'PENDING',
+      statusType: 'NEW_PENDING',
     };
   }
 
@@ -1086,6 +1414,7 @@ const getMockDataForUrl = (url, method, requestData) => {
 
   if (cleanUrl.includes('/auth/login')) {
     const email = (parsedData.email || '').toLowerCase().trim();
+    const password = parsedData.password;
     const regCompanies = getStore('registered_companies', []);
     const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
 
@@ -1102,15 +1431,44 @@ const getMockDataForUrl = (url, method, requestData) => {
     }
 
     // Company login check
-    const matchedReg = regCompanies.find((c) => c.email.toLowerCase() === email);
-    const isCompanyEmail = email.includes('company') || email.includes('recruiter') || email.includes('corp') || email.includes('nexus') || email.includes('cloudscale') || email.includes('fintech') || email.includes('hiring@') || email.includes('careers@');
+    const matchedReg = regCompanies.find((c) => c.email?.toLowerCase() === email);
+    const isCompanyEmail = email.includes('company') || email.includes('recruiter') || email.includes('corp') || email.includes('nexus') || email.includes('cloudscale') || email.includes('fintech') || email.includes('hiring@') || email.includes('careers@') || !!matchedReg;
 
     if (matchedReg || isCompanyEmail) {
+      if (matchedReg && matchedReg.password && matchedReg.password !== password) {
+        const error = new Error('Invalid email or password. Please verify your credentials.');
+        error.response = {
+          status: 401,
+          data: {
+            success: false,
+            message: 'Invalid email or password. Please verify your credentials.',
+          },
+        };
+        throw error;
+      }
+
       const compId = matchedReg ? String(matchedReg.id) : email.includes('nexus') ? '1' : email.includes('cloudscale') ? '2' : email.includes('fintech') ? '3' : '102';
       const isVerified =
         verifiedCompanies.includes(compId) ||
         verifiedCompanies.includes(email) ||
         (matchedReg && matchedReg.verificationStatus === 'VERIFIED');
+      const isRejected = matchedReg && matchedReg.verificationStatus === 'REJECTED';
+
+      if (isRejected) {
+        const error = new Error('Your company registration was declined by the administrator. Access to the employer portal cannot be granted. Please contact support@careerconnectors.dev.');
+        error.response = {
+          status: 403,
+          data: {
+            success: false,
+            message: 'Your company registration was declined by the administrator. Access to the employer portal cannot be granted. Please contact support@careerconnectors.dev.',
+            isRejected: true,
+            statusType: 'REJECTED',
+            email: email,
+            companyName: matchedReg ? matchedReg.name : 'Company',
+          },
+        };
+        throw error;
+      }
 
       if (!isVerified) {
         const error = new Error('Your company account is pending administrator verification. Access will be granted once an administrator approves your company.');
@@ -1120,6 +1478,9 @@ const getMockDataForUrl = (url, method, requestData) => {
             success: false,
             message: 'Your company account is pending administrator verification. Access will be granted once an administrator approves your company.',
             isPendingApproval: true,
+            statusType: 'PENDING',
+            email: email,
+            companyName: matchedReg ? matchedReg.name : 'Company',
           },
         };
         throw error;

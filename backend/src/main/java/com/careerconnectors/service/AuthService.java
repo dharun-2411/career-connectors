@@ -78,12 +78,26 @@ public class AuthService {
 
     @Transactional
     public AuthResponse registerCompany(CompanyRegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail().toLowerCase().trim())) {
+        String targetEmail = request.getEmail().toLowerCase().trim();
+        if (userRepository.existsByEmail(targetEmail)) {
+            User existingUser = userRepository.findByEmail(targetEmail).orElse(null);
+            if (existingUser != null && existingUser.getRole() == Role.ROLE_COMPANY) {
+                Company existingCompany = companyRepository.findByUser(existingUser).orElse(null);
+                if (existingCompany != null) {
+                    if (existingCompany.getVerificationStatus() == VerificationStatus.VERIFIED) {
+                        throw new ConflictException("This company account is already registered and approved by the platform administrator. Please sign in to your recruiter account.");
+                    } else if (existingCompany.getVerificationStatus() == VerificationStatus.REJECTED) {
+                        throw new ConflictException("This company registration was previously reviewed and declined by the platform administrator. Please contact support@careerconnectors.dev.");
+                    } else {
+                        throw new ConflictException("A registration request for this company has already been submitted and is currently pending administrator verification.");
+                    }
+                }
+            }
             throw new ConflictException("Email already in use: " + request.getEmail());
         }
 
         User user = User.builder()
-                .email(request.getEmail().toLowerCase().trim())
+                .email(targetEmail)
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                 .role(Role.ROLE_COMPANY)
                 .status(UserStatus.ACTIVE)
@@ -140,6 +154,9 @@ public class AuthService {
         } else if (user.getRole() == Role.ROLE_COMPANY) {
             Company company = companyRepository.findByUser(user)
                     .orElseThrow(() -> new ResourceNotFoundException("Company profile not found"));
+            if (company.getVerificationStatus() == VerificationStatus.REJECTED) {
+                throw new BadRequestException("Your company account registration was reviewed and declined by the platform administrator. Access has not been approved.");
+            }
             if (company.getVerificationStatus() != VerificationStatus.VERIFIED) {
                 throw new BadRequestException("Your company account is pending administrator verification. Access will be granted once an administrator approves your company.");
             }

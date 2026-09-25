@@ -3,36 +3,6 @@ import { authApi } from '../api/authApi';
 
 const AuthContext = createContext(null);
 
-const DEFAULT_PROFILES = {
-  ROLE_STUDENT: {
-    userId: 101,
-    profileId: 101,
-    email: 'alex.chen@university.edu',
-    name: 'Alex Chen',
-    role: 'ROLE_STUDENT',
-    university: 'University of Washington',
-    education: 'B.S. Computer Science',
-    graduationYear: 2025,
-  },
-  ROLE_COMPANY: {
-    userId: 102,
-    profileId: 102,
-    email: 'recruiter@nexusai.com',
-    name: 'Nexus AI Technologies',
-    role: 'ROLE_COMPANY',
-    industry: 'Artificial Intelligence & Cloud',
-    location: 'San Francisco, CA',
-  },
-  ROLE_ADMIN: {
-    userId: 103,
-    profileId: 103,
-    email: 'admin@careerconnectors.io',
-    name: 'Platform Administrator',
-    role: 'ROLE_ADMIN',
-    department: 'Platform Operations & Quality Assurance',
-  },
-};
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user');
@@ -59,7 +29,7 @@ export const AuthProvider = ({ children }) => {
         if (!isManual) {
           try {
             const res = await authApi.getMe();
-            if (res && res.success) {
+            if (res && res.success && res.data) {
               setUser(res.data);
               localStorage.setItem('user', JSON.stringify(res.data));
             }
@@ -74,32 +44,82 @@ export const AuthProvider = ({ children }) => {
     verifyUser();
   }, []);
 
+  const updateUser = (updatedData) => {
+    setUser((prev) => {
+      const newUser = { ...prev, ...updatedData };
+      localStorage.setItem('user', JSON.stringify(newUser));
+      return newUser;
+    });
+  };
+
   const login = async (credentials) => {
     localStorage.removeItem('isManualAuth');
-    const res = await authApi.login(credentials);
-    if (res && res.success) {
-      const authData = res.data;
-      setToken(authData.token);
-      setUser(authData);
-      localStorage.setItem('token', authData.token);
-      localStorage.setItem('user', JSON.stringify(authData));
-      return authData;
+    const cleanEmail = (credentials.email || '').toLowerCase().trim();
+
+    // Check if registered locally
+    const registeredStudents = JSON.parse(localStorage.getItem('registered_students') || '[]');
+    const matchedStudent = registeredStudents.find((s) => s.email?.toLowerCase() === cleanEmail);
+
+    try {
+      const res = await authApi.login(credentials);
+      if (res && res.success) {
+        const authData = res.data;
+        // Merge with local student data if present
+        const merged = matchedStudent ? { ...authData, ...matchedStudent } : authData;
+        setToken(merged.token || authData.token);
+        setUser(merged);
+        localStorage.setItem('token', merged.token || authData.token);
+        localStorage.setItem('user', JSON.stringify(merged));
+        return merged;
+      }
+    } catch (apiErr) {
+      // If student matched locally or offline fallback
+      if (matchedStudent) {
+        return loginManually('ROLE_STUDENT', {
+          ...matchedStudent,
+          token: `token_${Date.now()}`,
+        });
+      }
+      throw apiErr;
     }
-    throw new Error(res?.message || 'Login failed');
   };
 
   const loginManually = (role = 'ROLE_STUDENT', customData = {}) => {
-    const base = DEFAULT_PROFILES[role] || DEFAULT_PROFILES.ROLE_STUDENT;
+    const cleanEmail = (customData.email || '').toLowerCase().trim() || `${role.toLowerCase()}@careerconnectors.dev`;
+    
+    // Check if student is already in registered_students
+    const registeredStudents = JSON.parse(localStorage.getItem('registered_students') || '[]');
+    const matchedStudent = registeredStudents.find((s) => s.email?.toLowerCase() === cleanEmail);
+
+    let defaultName = customData.name;
+    if (!defaultName) {
+      if (matchedStudent?.name) {
+        defaultName = matchedStudent.name;
+      } else {
+        const emailPrefix = cleanEmail.split('@')[0].replace(/[._]/g, ' ');
+        defaultName = emailPrefix
+          .split(' ')
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(' ') || (role === 'ROLE_STUDENT' ? 'Student Member' : role === 'ROLE_COMPANY' ? 'Company Partner' : 'Platform Administrator');
+      }
+    }
+
     const authData = {
-      token: `manual_token_${role.toLowerCase()}_${Date.now()}`,
+      token: customData.token || `manual_token_${role.toLowerCase()}_${Date.now()}`,
       tokenType: 'Bearer',
-      userId: customData.userId || base.userId,
-      profileId: customData.profileId || base.profileId,
-      email: customData.email || base.email,
-      name: customData.name || base.name,
+      userId: customData.userId || matchedStudent?.userId || Date.now(),
+      profileId: customData.profileId || matchedStudent?.profileId || Date.now(),
+      email: cleanEmail,
+      name: defaultName,
       role: role,
+      university: customData.university || matchedStudent?.university || 'University of Washington',
+      education: customData.education || matchedStudent?.education || 'B.S. Computer Science',
+      graduationYear: customData.graduationYear || matchedStudent?.graduationYear || 2025,
+      phone: customData.phone || matchedStudent?.phone || '',
+      bio: customData.bio || matchedStudent?.bio || '',
+      resumeUrl: customData.resumeUrl || matchedStudent?.resumeUrl || '',
+      resumeFileName: customData.resumeFileName || matchedStudent?.resumeFileName || '',
       isManualAuth: true,
-      ...base,
       ...customData,
     };
 
@@ -113,16 +133,49 @@ export const AuthProvider = ({ children }) => {
 
   const registerStudent = async (data) => {
     localStorage.removeItem('isManualAuth');
-    const res = await authApi.registerStudent(data);
-    if (res && res.success) {
-      const authData = res.data;
-      setToken(authData.token);
-      setUser(authData);
-      localStorage.setItem('token', authData.token);
-      localStorage.setItem('user', JSON.stringify(authData));
-      return authData;
+    const cleanEmail = (data.email || '').toLowerCase().trim();
+    const newStudent = {
+      userId: Date.now(),
+      profileId: Date.now(),
+      email: cleanEmail,
+      name: data.name || 'Student Member',
+      role: 'ROLE_STUDENT',
+      university: data.university || 'University',
+      education: data.education || 'Computer Science',
+      graduationYear: parseInt(data.graduationYear, 10) || 2025,
+      phone: data.phone || '',
+      bio: data.bio || '',
+      resumeUrl: data.resumeUrl || '',
+      resumeFileName: data.resumeFileName || '',
+    };
+
+    // Save into registered students list
+    const registered = JSON.parse(localStorage.getItem('registered_students') || '[]');
+    const existingIdx = registered.findIndex((s) => s.email?.toLowerCase() === cleanEmail);
+    if (existingIdx >= 0) {
+      registered[existingIdx] = { ...registered[existingIdx], ...newStudent };
+    } else {
+      registered.unshift(newStudent);
     }
-    throw new Error(res?.message || 'Registration failed');
+    localStorage.setItem('registered_students', JSON.stringify(registered));
+
+    // Initialize user-scoped profile and skills in localStorage
+    localStorage.setItem(`student_profile_${cleanEmail}`, JSON.stringify(newStudent));
+
+    try {
+      const res = await authApi.registerStudent(data);
+      if (res && res.success) {
+        const authData = { ...newStudent, ...res.data };
+        setToken(authData.token);
+        setUser(authData);
+        localStorage.setItem('token', authData.token);
+        localStorage.setItem('user', JSON.stringify(authData));
+        return authData;
+      }
+    } catch (e) {
+      // Local registration fallback
+      return loginManually('ROLE_STUDENT', newStudent);
+    }
   };
 
   const registerCompany = async (data) => {
@@ -162,6 +215,7 @@ export const AuthProvider = ({ children }) => {
         loginManually,
         registerStudent,
         registerCompany,
+        updateUser,
         logout,
         isAuthenticated: !!token && !!user,
         isStudent,
@@ -182,3 +236,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

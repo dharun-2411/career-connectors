@@ -55,9 +55,9 @@ export const AdminOpportunities = () => {
         <Loader message="Loading postings for moderation..." />
       ) : (
         <div className="space-y-4">
-          <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/90">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-nexus-sm">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+              <thead className="bg-slate-50/90 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
                 <tr>
                   <th className="p-4">Position Title</th>
                   <th className="p-4">Company</th>
@@ -66,21 +66,21 @@ export const AdminOpportunities = () => {
                   <th className="p-4 text-right">Moderation</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-300">
+              <tbody className="divide-y divide-slate-100 text-slate-700">
                 {opportunities.map((opp) => (
-                  <tr key={opp.id} className="hover:bg-slate-800/40 transition-colors">
-                    <td className="p-4 font-bold text-white text-sm">
-                      <Link to={`/opportunities/${opp.id}`} className="hover:text-blue-400">
+                  <tr key={opp.id} className="hover:bg-slate-50/70 transition-colors">
+                    <td className="p-4 font-bold text-slate-900 text-sm">
+                      <Link to={`/opportunities/${opp.id}`} className="hover:text-indigo-600 transition-colors">
                         {opp.title}
                       </Link>
                     </td>
-                    <td className="p-4 font-semibold text-slate-200">{opp.companyName}</td>
+                    <td className="p-4 font-semibold text-slate-800">{opp.companyName}</td>
                     <td className="p-4">
-                      <div>{opp.type.replace('_', ' ')}</div>
+                      <div className="font-medium text-slate-800">{opp.type.replace('_', ' ')}</div>
                       <div className="text-slate-400 text-[11px]">{opp.isRemote ? 'Remote' : opp.location}</div>
                     </td>
                     <td className="p-4">
-                      <Badge variant={opp.status === 'OPEN' ? 'success' : 'default'} size="sm">
+                      <Badge variant={opp.status === 'OPEN' ? 'emerald' : 'default'} size="sm">
                         {opp.status}
                       </Badge>
                     </td>
@@ -88,7 +88,7 @@ export const AdminOpportunities = () => {
                       <button
                         onClick={() => handleDelete(opp.id)}
                         title="Remove Posting"
-                        className="p-2 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-950 transition-colors"
+                        className="p-2 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>

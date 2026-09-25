@@ -59,17 +59,18 @@ export const Applications = () => {
 
   return (
     <DashboardLayout
-      title="My Applications Tracker"
-      subtitle="Monitor your candidate progression across submitted roles in real-time."
+      title="Candidate Application Tracker"
+      subtitle="Monitor candidate milestone progression across submitted roles and externship contracts in real-time."
+      breadcrumb="Application Tracker"
     >
       {loading ? (
         <Loader message="Loading application statuses..." />
       ) : applications.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-          <FileCheck2 className="w-12 h-12 text-slate-600 mx-auto" />
-          <h3 className="text-lg font-bold text-white">No active applications found</h3>
-          <p className="text-sm text-slate-400 max-w-md mx-auto">
-            You haven't applied to any opportunities yet. Explore our open listings and apply with your AI match score!
+        <div className="p-12 text-center rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-4">
+          <FileCheck2 className="w-12 h-12 text-slate-300 mx-auto" />
+          <h3 className="text-base font-extrabold text-slate-900">No active applications found</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+            You haven't applied to any opportunities yet. Explore our open externship scope listings and submit with your AI match score!
           </p>
           <Link to="/opportunities">
             <Button variant="primary" size="md">
@@ -78,7 +79,7 @@ export const Applications = () => {
           </Link>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4">
           {applications.map((app) => {
             const currentStage = getStageIndex(app.status);
             const isRejected = app.status === 'REJECTED';
@@ -94,38 +95,38 @@ export const Applications = () => {
             return (
               <div
                 key={app.id}
-                className="p-6 sm:p-7 rounded-3xl bg-slate-900/80 border border-slate-800 space-y-6 hover:border-slate-700 transition-all"
+                className="p-6 rounded-2xl bg-white border border-slate-200/90 space-y-5 hover:border-slate-300 shadow-sm transition-all"
               >
                 {/* Top Bar */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3.5">
                     {app.companyLogoUrl ? (
                       <img
                         src={app.companyLogoUrl}
                         alt={app.companyName}
-                        className="w-12 h-12 rounded-2xl object-cover border border-slate-800"
+                        className="w-12 h-12 rounded-xl object-cover border border-slate-100 shadow-sm"
                       />
                     ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-300 font-bold">
+                      <div className="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center font-extrabold text-sm">
                         {app.companyName?.substring(0, 2).toUpperCase()}
                       </div>
                     )}
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-lg font-bold text-white">
-                          <Link to={`/opportunities/${app.opportunityId}`} className="hover:text-blue-400 transition-colors">
+                        <h3 className="text-base font-extrabold text-slate-900">
+                          <Link to={`/opportunities/${app.opportunityId}`} className="hover:text-indigo-600 transition-colors">
                             {app.opportunityTitle}
                           </Link>
                         </h3>
-                        <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
                           App #{app.id}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                        <Building2 className="w-3.5 h-3.5 text-blue-400" />
+                      <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5 font-medium">
+                        <Building2 className="w-3.5 h-3.5 text-indigo-600" />
                         <span>{app.companyName}</span>
                         <span>•</span>
-                        <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
                         <span>Applied on {new Date(app.appliedAt).toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -133,8 +134,8 @@ export const Applications = () => {
 
                   <div className="flex items-center gap-3">
                     {(app.studentResumeUrl || app.resumeUrl) && (
-                      <span className="text-[11px] font-semibold text-purple-300 flex items-center gap-1 bg-purple-950/60 border border-purple-800/60 px-2.5 py-1 rounded-xl">
-                        <FileText className="w-3.5 h-3.5 text-purple-400" /> Resume Attached
+                      <span className="text-[11px] font-bold text-indigo-700 flex items-center gap-1 bg-indigo-50 border border-indigo-200/70 px-2.5 py-1 rounded-full">
+                        <FileText className="w-3.5 h-3.5 text-indigo-600" /> Resume Attached
                       </span>
                     )}
                     {app.matchScore && <ScoreMeter score={app.matchScore} size="sm" />}
@@ -147,10 +148,10 @@ export const Applications = () => {
                 </div>
 
                 {/* Interactive Status Pipeline Stepper */}
-                <div className="pt-4 border-t border-slate-800/80">
+                <div className="pt-3 border-t border-slate-100">
                   <div className="grid grid-cols-4 gap-2 relative">
                     {/* Background connector line */}
-                    <div className="absolute top-1/2 left-[12.5%] right-[12.5%] -translate-y-1/2 h-1 bg-slate-800 z-0" />
+                    <div className="absolute top-1/2 left-[12.5%] right-[12.5%] -translate-y-1/2 h-1 bg-slate-100 z-0" />
 
                     {stages.map((stage) => {
                       const isActive = stage.num <= currentStage;
@@ -159,27 +160,27 @@ export const Applications = () => {
                       return (
                         <div key={stage.num} className="flex flex-col items-center relative z-10 text-center">
                           <div
-                            className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
                               isCurrent && isSelected
-                                ? 'bg-emerald-500 text-white ring-4 ring-emerald-500/20'
+                                ? 'bg-emerald-600 text-white shadow-sm ring-4 ring-emerald-100'
                                 : isCurrent && isRejected
-                                ? 'bg-rose-600 text-white ring-4 ring-rose-600/20'
+                                ? 'bg-rose-600 text-white shadow-sm ring-4 ring-rose-100'
                                 : isActive
-                                ? 'bg-blue-600 text-white ring-4 ring-blue-600/20'
-                                : 'bg-slate-800 text-slate-500 border border-slate-700'
+                                ? 'bg-indigo-600 text-white shadow-sm ring-4 ring-indigo-100'
+                                : 'bg-slate-100 text-slate-400 border border-slate-200'
                             }`}
                           >
                             {stage.num < currentStage ? (
-                              <CheckCircle2 className="w-5 h-5" />
+                              <CheckCircle2 className="w-4 h-4" />
                             ) : isCurrent && isRejected ? (
-                              <XCircle className="w-5 h-5" />
+                              <XCircle className="w-4 h-4" />
                             ) : (
                               stage.num
                             )}
                           </div>
                           <span
-                            className={`text-xs font-semibold mt-2 ${
-                              isActive ? 'text-slate-200' : 'text-slate-500'
+                            className={`text-[11px] font-bold mt-1.5 ${
+                              isActive ? 'text-slate-800' : 'text-slate-400'
                             }`}
                           >
                             {stage.label}
@@ -192,8 +193,8 @@ export const Applications = () => {
 
                 {/* Cover letter snippet */}
                 {app.coverLetter && (
-                  <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800/60 text-xs text-slate-400 leading-relaxed">
-                    <span className="font-semibold text-slate-300 block mb-1">Your Submission Note:</span>
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600 leading-relaxed">
+                    <span className="font-bold text-slate-800 block mb-0.5">Your Submission Note:</span>
                     {app.coverLetter}
                   </div>
                 )}
@@ -211,3 +212,4 @@ export const Applications = () => {
     </DashboardLayout>
   );
 };
+

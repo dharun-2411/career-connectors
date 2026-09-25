@@ -117,19 +117,19 @@ export const PostOpportunity = () => {
         title="Post New Work Opportunity"
         subtitle="Define position requirements, skill weightages, and candidate expectations for AI matching."
       >
-        <div className="max-w-xl mx-auto my-12 p-8 rounded-3xl bg-slate-900 border border-slate-800 text-center space-y-6 shadow-2xl">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-400">
+        <div className="max-w-xl mx-auto my-12 p-8 rounded-2xl bg-white border border-slate-200/90 text-center space-y-6 shadow-nexus">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center mx-auto text-amber-600">
             <Lock className="w-8 h-8" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-white">Posting Locked: Admin Approval Required</h3>
-            <p className="text-sm text-slate-400">
+            <h3 className="text-xl font-bold text-slate-900">Posting Locked: Admin Approval Required</h3>
+            <p className="text-sm text-slate-600">
               Your company account is currently{' '}
-              <span className="text-amber-400 font-semibold uppercase">{profile.verificationStatus || 'PENDING'}</span>.
+              <span className="text-amber-700 font-semibold uppercase">{profile.verificationStatus || 'PENDING'}</span>.
               Only verified companies approved by an administrator in the trust queue can publish opportunities.
             </p>
           </div>
-          <div className="flex items-center justify-center gap-3 pt-4 border-t border-slate-800">
+          <div className="flex items-center justify-center gap-3 pt-4 border-t border-slate-100">
             <Button variant="secondary" onClick={() => navigate('/company/dashboard')}>
               Return to Dashboard
             </Button>
@@ -149,21 +149,21 @@ export const PostOpportunity = () => {
     >
       <form onSubmit={handleSubmit} className="max-w-4xl space-y-8">
         {errorMsg && (
-          <div className="p-4 rounded-xl bg-rose-950/80 border border-rose-800/60 text-rose-300 text-sm flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500" />
             {errorMsg}
           </div>
         )}
 
         {/* Basic Role Specs */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-6">
-          <div className="flex items-center gap-2 pb-4 border-b border-slate-800">
-            <Briefcase className="w-5 h-5 text-purple-400" />
-            <h3 className="text-lg font-bold text-white">Position Overview</h3>
+        <div className="p-6 sm:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-nexus-sm space-y-6">
+          <div className="flex items-center gap-2 pb-4 border-b border-slate-100">
+            <Briefcase className="w-5 h-5 text-indigo-600" />
+            <h3 className="text-lg font-bold text-slate-900">Position Overview</h3>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
               Opportunity Title *
             </label>
             <input
@@ -172,19 +172,19 @@ export const PostOpportunity = () => {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Full-Stack AI Software Engineering Intern"
-              className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-purple-500 focus:outline-none"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 focus:outline-none transition-all"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
                 Opportunity Type *
               </label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-purple-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:border-indigo-500 focus:outline-none"
               >
                 <option value="INTERNSHIP">Internship</option>
                 <option value="FULL_TIME">Full-Time</option>
@@ -194,13 +194,13 @@ export const PostOpportunity = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
                 Experience Level
               </label>
               <select
                 value={experienceLevel}
                 onChange={(e) => setExperienceLevel(e.target.value)}
-                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-purple-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:border-indigo-500 focus:outline-none"
               >
                 <option value="ENTRY_LEVEL">Entry-Level (Students/Grads)</option>
                 <option value="JUNIOR">Junior (1-2 years)</option>
@@ -210,21 +210,21 @@ export const PostOpportunity = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
                 Application Deadline
               </label>
               <input
                 type="date"
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
-                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-purple-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:border-indigo-500 focus:outline-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
                 Location *
               </label>
               <input
@@ -233,12 +233,12 @@ export const PostOpportunity = () => {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="e.g. San Francisco, CA"
-                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-purple-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 focus:outline-none transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
                 Stipend / Salary
               </label>
               <input
@@ -246,12 +246,12 @@ export const PostOpportunity = () => {
                 value={stipend}
                 onChange={(e) => setStipend(e.target.value)}
                 placeholder="e.g. $5,000 / month"
-                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-purple-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 focus:outline-none transition-all"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
                 Duration
               </label>
               <input
@@ -259,26 +259,26 @@ export const PostOpportunity = () => {
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 placeholder="e.g. 3 Months (Summer)"
-                className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-purple-500 focus:outline-none"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 focus:outline-none transition-all"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-2 p-3 bg-slate-950 rounded-xl border border-slate-800">
+          <div className="flex items-center gap-2.5 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
             <input
               type="checkbox"
               id="isRemotePost"
               checked={isRemote}
               onChange={(e) => setIsRemote(e.target.checked)}
-              className="w-4 h-4 rounded text-purple-600 bg-slate-900 border-slate-700 focus:ring-purple-500"
+              className="w-4 h-4 rounded text-indigo-600 bg-white border-slate-300 focus:ring-indigo-500"
             />
-            <label htmlFor="isRemotePost" className="text-xs font-semibold text-slate-300 cursor-pointer">
+            <label htmlFor="isRemotePost" className="text-xs font-semibold text-slate-700 cursor-pointer">
               This position supports 100% remote work
             </label>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+            <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">
               Role Description & Expectations *
             </label>
             <textarea
@@ -287,24 +287,24 @@ export const PostOpportunity = () => {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Describe project responsibilities, team culture, and learning opportunities..."
-              className="w-full p-3.5 bg-slate-950 border border-slate-800 rounded-xl text-white text-sm focus:border-purple-500 focus:outline-none leading-relaxed"
+              className="w-full p-3.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-50 focus:outline-none leading-relaxed transition-all"
             />
           </div>
         </div>
 
         {/* Required Skills & Weightage Builder */}
-        <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div className="p-6 sm:p-8 rounded-2xl bg-white border border-slate-200/90 shadow-nexus-sm space-y-6">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-purple-400" />
-              <h3 className="text-lg font-bold text-white">Skill Requirements & AI Weightages</h3>
+              <Sparkles className="w-5 h-5 text-indigo-600" />
+              <h3 className="text-lg font-bold text-slate-900">Skill Requirements & AI Weightages</h3>
             </div>
             <Button variant="secondary" size="sm" icon={Plus} onClick={handleAddSkillRow}>
               Add Required Skill
             </Button>
           </div>
 
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             Skill weightages adjust the importance of each competency in our AI matching and candidate ranking algorithms (1.0x = Standard, 3.0x = Critical Core).
           </p>
 
@@ -312,7 +312,7 @@ export const PostOpportunity = () => {
             {skills.map((skill, index) => (
               <div
                 key={index}
-                className="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3.5 rounded-2xl bg-slate-950 border border-slate-800 items-center"
+                className="grid grid-cols-1 sm:grid-cols-12 gap-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200 items-center"
               >
                 <div className="sm:col-span-5">
                   <input
@@ -321,7 +321,7 @@ export const PostOpportunity = () => {
                     placeholder="Skill Name (e.g. React.js, Python, PostgreSQL)"
                     value={skill.skillName}
                     onChange={(e) => handleSkillChange(index, 'skillName', e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:border-purple-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-900 text-sm focus:border-indigo-500 focus:outline-none"
                   />
                 </div>
 
@@ -329,7 +329,7 @@ export const PostOpportunity = () => {
                   <select
                     value={skill.requiredProficiency}
                     onChange={(e) => handleSkillChange(index, 'requiredProficiency', e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:border-purple-500 focus:outline-none"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-slate-900 text-xs focus:border-indigo-500 focus:outline-none"
                   >
                     <option value="BEGINNER">Req: Beginner</option>
                     <option value="INTERMEDIATE">Req: Intermediate</option>
@@ -339,7 +339,7 @@ export const PostOpportunity = () => {
                 </div>
 
                 <div className="sm:col-span-3 flex items-center gap-2">
-                  <span className="text-xs text-slate-400 whitespace-nowrap">Weight:</span>
+                  <span className="text-xs text-slate-500 whitespace-nowrap">Weight:</span>
                   <input
                     type="number"
                     step="0.5"
@@ -347,7 +347,7 @@ export const PostOpportunity = () => {
                     max="5.0"
                     value={skill.weightage}
                     onChange={(e) => handleSkillChange(index, 'weightage', e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-white text-xs focus:border-purple-500 focus:outline-none"
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl text-slate-900 text-xs focus:border-indigo-500 focus:outline-none"
                   />
                 </div>
 
@@ -356,7 +356,7 @@ export const PostOpportunity = () => {
                     type="button"
                     onClick={() => handleRemoveSkillRow(index)}
                     disabled={skills.length === 1}
-                    className="text-slate-500 hover:text-rose-400 p-2 rounded-lg hover:bg-slate-900 disabled:opacity-30"
+                    className="text-slate-400 hover:text-rose-600 p-2 rounded-lg hover:bg-white disabled:opacity-30 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -370,7 +370,7 @@ export const PostOpportunity = () => {
           <Button variant="ghost" size="lg" onClick={() => navigate('/company/dashboard')}>
             Cancel
           </Button>
-          <Button type="submit" variant="accent" size="lg" loading={loading}>
+          <Button type="submit" variant="primary" size="lg" loading={loading}>
             Publish Opportunity
           </Button>
         </div>

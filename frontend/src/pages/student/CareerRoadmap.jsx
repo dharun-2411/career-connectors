@@ -169,18 +169,18 @@ export const CareerRoadmap = () => {
       subtitle="Search any tech domain or explore trending paths to generate a structured, stepwise curriculum with hands-on projects and milestones."
     >
       {/* Top Tabs */}
-      <div className="flex items-center justify-between border-b border-slate-800 mb-8">
+      <div className="flex items-center justify-between border-b border-slate-200 mb-8">
         <div className="flex items-center gap-6">
           <button
             type="button"
             onClick={() => setActiveTab('explore')}
             className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
               activeTab === 'explore'
-                ? 'border-blue-500 text-white'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Compass className="w-4 h-4 text-blue-400" />
+            <Compass className="w-4 h-4 text-indigo-600" />
             <span>Generate Roadmap</span>
           </button>
 
@@ -189,14 +189,14 @@ export const CareerRoadmap = () => {
             onClick={handleLoadSavedTab}
             className={`pb-3 text-sm font-bold flex items-center gap-2 border-b-2 transition-all ${
               activeTab === 'saved'
-                ? 'border-blue-500 text-white'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
+                ? 'border-indigo-600 text-indigo-600'
+                : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
-            <Bookmark className="w-4 h-4 text-purple-400" />
+            <Bookmark className="w-4 h-4 text-purple-600" />
             <span>My Saved Roadmaps</span>
             {savedRoadmaps.length > 0 && (
-              <span className="px-2 py-0.5 rounded-full bg-slate-800 text-[11px] text-blue-400 font-semibold">
+              <span className="px-2 py-0.5 rounded-full bg-indigo-50 border border-indigo-100 text-[11px] text-indigo-700 font-semibold">
                 {savedRoadmaps.length}
               </span>
             )}
@@ -208,8 +208,8 @@ export const CareerRoadmap = () => {
         /* Saved Roadmaps Tab View */
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-base font-bold text-white">Your Bookmarked Career Roadmaps</h3>
-            <span className="text-xs text-slate-400">
+            <h3 className="text-base font-bold text-slate-900">Your Bookmarked Career Roadmaps</h3>
+            <span className="text-xs text-slate-500">
               Track your phase completions and milestones
             </span>
           </div>
@@ -225,10 +225,10 @@ export const CareerRoadmap = () => {
         <div className="space-y-10">
           {/* Search Header */}
           <div className="text-center space-y-4 max-w-2xl mx-auto pt-2">
-            <h2 className="text-xl sm:text-2xl font-bold text-white">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
               What career domain would you like to master?
             </h2>
-            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
               Enter any specialized field or click a trending topic below. Our AI evaluates foundational prerequisites, core toolchains, and real-world portfolio requirements.
             </p>
 
@@ -242,24 +242,24 @@ export const CareerRoadmap = () => {
 
           {/* Error Banner */}
           {errorMessage && (
-            <div className="p-4 rounded-2xl bg-rose-950/80 border border-rose-800/60 text-rose-300 text-xs sm:text-sm flex items-center gap-3 max-w-3xl mx-auto">
-              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs sm:text-sm flex items-center gap-3 max-w-3xl mx-auto">
+              <AlertCircle className="w-5 h-5 flex-shrink-0 text-rose-500" />
               <span>{errorMessage}</span>
             </div>
           )}
 
           {/* Skeleton Loader during Roadmap Generation */}
           {roadmapLoading && (
-            <div className="p-8 rounded-3xl bg-slate-900/60 border border-slate-800/80 space-y-6 animate-pulse max-w-4xl mx-auto">
-              <div className="h-6 bg-slate-800 rounded-lg w-1/3" />
-              <div className="h-4 bg-slate-800/60 rounded w-3/4" />
-              <div className="h-3 bg-slate-800/40 rounded w-1/2" />
+            <div className="p-8 rounded-2xl bg-white border border-slate-200 shadow-nexus-sm space-y-6 animate-pulse max-w-4xl mx-auto">
+              <div className="h-6 bg-slate-200 rounded-lg w-1/3" />
+              <div className="h-4 bg-slate-100 rounded w-3/4" />
+              <div className="h-3 bg-slate-100 rounded w-1/2" />
               <div className="grid grid-cols-3 gap-4 pt-4">
-                <div className="h-20 bg-slate-800/50 rounded-2xl" />
-                <div className="h-20 bg-slate-800/50 rounded-2xl" />
-                <div className="h-20 bg-slate-800/50 rounded-2xl" />
+                <div className="h-20 bg-slate-100 rounded-xl" />
+                <div className="h-20 bg-slate-100 rounded-xl" />
+                <div className="h-20 bg-slate-100 rounded-xl" />
               </div>
-              <div className="text-center text-xs text-blue-400 font-semibold pt-4">
+              <div className="text-center text-xs text-indigo-600 font-semibold pt-4">
                 Synthesizing AI phases, projects, and certifications for {selectedDomainName}...
               </div>
             </div>
@@ -280,13 +280,13 @@ export const CareerRoadmap = () => {
           )}
 
           {/* Trending Domains Section */}
-          <div className="space-y-5 pt-4 border-t border-slate-800/80">
+          <div className="space-y-5 pt-4 border-t border-slate-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-blue-400" />
-                <h3 className="text-lg font-bold text-white">Trending Industry Domains</h3>
+                <TrendingUp className="w-5 h-5 text-indigo-600" />
+                <h3 className="text-lg font-bold text-slate-900">Trending Industry Domains</h3>
               </div>
-              <span className="text-xs text-slate-400 font-medium">
+              <span className="text-xs text-slate-500 font-medium">
                 Curated high-growth tech paths
               </span>
             </div>
@@ -294,7 +294,7 @@ export const CareerRoadmap = () => {
             {trendingLoading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[1, 2, 3, 4, 5, 6].map((n) => (
-                  <div key={n} className="h-32 rounded-2xl bg-slate-900 animate-pulse" />
+                  <div key={n} className="h-32 rounded-2xl bg-white border border-slate-200 animate-pulse" />
                 ))}
               </div>
             ) : (

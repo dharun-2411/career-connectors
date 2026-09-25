@@ -115,80 +115,80 @@ export const OpportunityDetail = () => {
   };
 
   if (loading) return <Loader fullScreen message="Loading opportunity specification..." />;
-  if (!opp) return <div className="p-8 text-center text-slate-400">Opportunity not found.</div>;
+  if (!opp) return <div className="p-8 text-center text-slate-500">Opportunity not found.</div>;
 
   return (
-    <DashboardLayout>
+    <DashboardLayout breadcrumb="Opportunity Scope">
       {/* Back button */}
-      <div className="mb-6">
+      <div className="mb-4">
         <Link
           to="/opportunities"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-indigo-600 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Opportunities
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Main Opportunity Spec */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2 space-y-6">
           {/* Header Card */}
-          <div className="p-6 sm:p-8 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-6">
+          <div className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 {opp.companyLogoUrl ? (
                   <img
                     src={opp.companyLogoUrl}
                     alt={opp.companyName}
-                    className="w-14 h-14 rounded-2xl object-cover border border-slate-800"
+                    className="w-14 h-14 rounded-2xl object-cover border border-slate-100 shadow-sm"
                   />
                 ) : (
-                  <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-300 font-bold text-lg">
+                  <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center justify-center font-extrabold text-lg">
                     {opp.companyName?.substring(0, 2).toUpperCase()}
                   </div>
                 )}
                 <div>
-                  <h1 className="text-2xl sm:text-3xl font-extrabold text-white">{opp.title}</h1>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-blue-400 font-medium">
-                    <Building2 className="w-4 h-4" />
+                  <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">{opp.title}</h1>
+                  <div className="flex items-center gap-1.5 mt-1 text-xs text-indigo-600 font-bold">
+                    <Building2 className="w-3.5 h-3.5" />
                     <span>{opp.companyName}</span>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <Badge variant="primary" size="lg">{opp.type.replace('_', ' ')}</Badge>
-                {opp.isRemote && <Badge variant="success" size="lg">Remote</Badge>}
+                <Badge variant="primary" size="md">{opp.type.replace('_', ' ')}</Badge>
+                {opp.isRemote && <Badge variant="success" size="md">Remote</Badge>}
               </div>
             </div>
 
             {/* Quick Details Chips */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4 rounded-2xl bg-slate-950/60 border border-slate-800/80">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200/80">
               <div>
-                <span className="text-[11px] text-slate-500 uppercase tracking-wider block font-semibold">Location</span>
-                <span className="text-xs sm:text-sm font-semibold text-slate-200 mt-0.5 flex items-center gap-1">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Location</span>
+                <span className="text-xs font-bold text-slate-800 mt-0.5 flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
                   {opp.isRemote ? 'Remote / Flexible' : opp.location}
                 </span>
               </div>
               <div>
-                <span className="text-[11px] text-slate-500 uppercase tracking-wider block font-semibold">Stipend / Comp</span>
-                <span className="text-xs sm:text-sm font-semibold text-slate-200 mt-0.5 flex items-center gap-1">
-                  <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Stipend / Comp</span>
+                <span className="text-xs font-bold text-slate-800 mt-0.5 flex items-center gap-1">
+                  <DollarSign className="w-3.5 h-3.5 text-emerald-600" />
                   {opp.stipend || 'Competitive'}
                 </span>
               </div>
               <div>
-                <span className="text-[11px] text-slate-500 uppercase tracking-wider block font-semibold">Duration</span>
-                <span className="text-xs sm:text-sm font-semibold text-slate-200 mt-0.5 flex items-center gap-1">
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Duration</span>
+                <span className="text-xs font-bold text-slate-800 mt-0.5 flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5 text-slate-400" />
                   {opp.duration || 'Flexible'}
                 </span>
               </div>
               <div>
-                <span className="text-[11px] text-slate-500 uppercase tracking-wider block font-semibold">Deadline</span>
-                <span className="text-xs sm:text-sm font-semibold text-slate-200 mt-0.5 flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-bold">Deadline</span>
+                <span className="text-xs font-bold text-slate-800 mt-0.5 flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-amber-500" />
                   {opp.deadline || 'Rolling basis'}
                 </span>
               </div>
@@ -196,28 +196,28 @@ export const OpportunityDetail = () => {
 
             {/* Opportunity Description */}
             <div>
-              <h3 className="text-base font-bold text-white mb-3">Role Overview & Description</h3>
-              <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-line">
+              <h3 className="text-sm font-extrabold text-slate-900 mb-2">Role Overview &amp; Description</h3>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed whitespace-pre-line">
                 {opp.description}
               </p>
             </div>
 
             {/* Required Skills Matrix */}
             <div>
-              <h3 className="text-base font-bold text-white mb-4">Required Technical Skills & Weightages</h3>
+              <h3 className="text-sm font-extrabold text-slate-900 mb-3">Required Technical Skills &amp; Weightages</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {opp.requiredSkills?.map((skill) => (
                   <div
                     key={skill.id}
-                    className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between"
+                    className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between"
                   >
                     <div>
-                      <div className="text-sm font-bold text-white">{skill.skillName}</div>
-                      <div className="text-xs text-slate-400 mt-0.5">
-                        Required: <span className="text-blue-400 font-medium">{skill.requiredProficiency}</span>
+                      <div className="text-xs font-bold text-slate-900">{skill.skillName}</div>
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        Required: <span className="text-indigo-600 font-bold">{skill.requiredProficiency}</span>
                       </div>
                     </div>
-                    <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-900 border border-slate-800 text-slate-300">
+                    <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-white border border-slate-200 text-slate-600">
                       Weight: {skill.weightage}x
                     </span>
                   </div>
@@ -230,52 +230,52 @@ export const OpportunityDetail = () => {
         {/* Right Col: AI Match Widget & Application Trigger */}
         <div className="space-y-6">
           {isStudent && (
-            <div className="p-6 rounded-3xl bg-gradient-to-b from-blue-950/40 via-slate-900 to-slate-900 border border-blue-900/50 space-y-6 shadow-xl">
+            <div className="p-6 rounded-2xl bg-white border border-slate-200/90 space-y-5 shadow-sm">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-amber-400" />
-                <h3 className="text-base font-bold text-white">AI Compatibility Assessment</h3>
+                <Sparkles className="w-4 h-4 text-amber-500" />
+                <h3 className="text-sm font-extrabold text-slate-900">AI Compatibility Assessment</h3>
               </div>
 
               {/* Large Score Meter */}
               <ScoreMeter score={matchData?.overallScore || opp.matchScore || 0} size="lg" />
 
               {matchData?.explanation && (
-                <p className="text-xs text-slate-300 bg-slate-950/70 p-3.5 rounded-xl border border-slate-800 leading-relaxed">
+                <p className="text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-200 leading-relaxed">
                   {matchData.explanation}
                 </p>
               )}
 
               {/* Skill Gap Analysis Navigation CTA */}
               <Link to={`/student/skill-gap/${opp.id}`} className="block">
-                <Button variant="outline" size="md" className="w-full" icon={Target}>
-                  Analyze Skill Gap & Roadmap
+                <Button variant="secondary" size="md" className="w-full text-xs font-bold" icon={Target}>
+                  Analyze Skill Gap &amp; Roadmap
                 </Button>
               </Link>
 
               {/* Apply Button */}
               {opp.hasApplied ? (
-                <Button variant="ghost" size="lg" disabled className="w-full text-emerald-400 border border-emerald-500/40">
-                  <CheckCircle2 className="w-5 h-5 mr-2" /> Application Submitted
-                </Button>
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-center font-bold text-xs flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4" /> Application Submitted
+                </div>
               ) : (
                 <Button
                   variant="primary"
                   size="lg"
-                  className="w-full"
+                  className="w-full text-xs font-bold"
                   onClick={() => setApplyModalOpen(true)}
                 >
-                  Apply Now
+                  Apply to Deliverable Role
                 </Button>
               )}
             </div>
           )}
 
           {/* Company Mini Card */}
-          <div className="p-6 rounded-3xl bg-slate-900 border border-slate-800 space-y-4">
-            <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">About the Company</h4>
-            <div className="text-sm font-bold text-white">{opp.companyName}</div>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Verified employer offering real-world career growth and mentorship.
+          <div className="p-5 rounded-2xl bg-white border border-slate-200/90 space-y-2 shadow-sm">
+            <h4 className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">About the Employer Host</h4>
+            <div className="text-xs font-bold text-slate-900">{opp.companyName}</div>
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Verified externship host offering real-world career acceleration and mentorship.
             </p>
           </div>
         </div>
@@ -289,11 +289,11 @@ export const OpportunityDetail = () => {
       >
         {applySuccess ? (
           <div className="text-center py-6 space-y-4">
-            <div className="w-14 h-14 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-8 h-8" />
             </div>
-            <h4 className="text-lg font-bold text-white">Your application was submitted!</h4>
-            <p className="text-sm text-slate-400 max-w-md mx-auto">
+            <h4 className="text-base font-extrabold text-slate-900">Your application was submitted!</h4>
+            <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
               Your profile, contact details, and AI skill assessment have been transmitted to {opp.companyName}.
             </p>
             <div className="pt-4 flex justify-center gap-3">
@@ -310,24 +310,24 @@ export const OpportunityDetail = () => {
         ) : (
           <form onSubmit={handleApplySubmit} className="space-y-4">
             {applyError && (
-              <div className="p-3 rounded-xl bg-rose-950/70 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2">
+              <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
                 {applyError}
               </div>
             )}
 
             {/* Mandatory Resume Attachment Section */}
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-purple-400" /> Attached Candidate Resume
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-indigo-600" /> Attached Candidate Resume
                 </span>
                 {(tailoredResumeUrl || studentProfile?.resumeUrl) ? (
-                  <span className="text-[11px] font-semibold text-emerald-400 px-2 py-0.5 rounded-full bg-emerald-950 border border-emerald-800/60 flex items-center gap-1">
+                  <span className="text-[11px] font-bold text-emerald-700 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" /> {tailoredResumeUrl ? 'Tailored Resume Ready' : 'Profile Resume Ready'}
                   </span>
                 ) : (
-                  <span className="text-[11px] font-semibold text-rose-400 px-2 py-0.5 rounded-full bg-rose-950 border border-rose-800/60">
+                  <span className="text-[11px] font-bold text-rose-700 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200">
                     Mandatory
                   </span>
                 )}
@@ -335,11 +335,11 @@ export const OpportunityDetail = () => {
 
               {(tailoredResumeUrl || studentProfile?.resumeUrl) ? (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-slate-300 bg-slate-900/60 p-3 rounded-xl border border-slate-800">
+                  <div className="flex items-center justify-between text-xs text-slate-700 bg-white p-3 rounded-xl border border-slate-200">
                     <div className="flex items-center gap-2 truncate">
-                      <FileText className={`w-4 h-4 flex-shrink-0 ${tailoredResumeUrl ? 'text-blue-400' : 'text-purple-400'}`} />
+                      <FileText className={`w-4 h-4 flex-shrink-0 ${tailoredResumeUrl ? 'text-indigo-600' : 'text-purple-600'}`} />
                       <div className="truncate">
-                        <div className="truncate font-semibold text-white">
+                        <div className="truncate font-bold text-slate-900">
                           {tailoredResumeName || studentProfile?.resumeFileName || `${studentProfile?.name || 'Candidate'}_Resume.pdf`}
                         </div>
                         <div className="text-[10px] text-slate-400">
@@ -349,7 +349,7 @@ export const OpportunityDetail = () => {
                     </div>
 
                     <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                      <label className="text-xs text-blue-400 hover:text-blue-300 font-semibold cursor-pointer">
+                      <label className="text-xs text-indigo-600 hover:text-indigo-800 font-bold cursor-pointer">
                         {uploadingResume ? 'Saving...' : 'Upload Tailored'}
                         <input
                           type="file"
@@ -392,7 +392,7 @@ export const OpportunityDetail = () => {
                             setTailoredResumeUrl(null);
                             setTailoredResumeName('');
                           }}
-                          className="text-[10px] text-slate-400 hover:text-slate-200 underline"
+                          className="text-[10px] text-slate-400 hover:text-slate-600 underline"
                         >
                           Use Profile
                         </button>
@@ -402,10 +402,10 @@ export const OpportunityDetail = () => {
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <p className="text-xs text-amber-300/90 leading-relaxed">
+                  <p className="text-xs text-slate-500 leading-relaxed">
                     Upload your domain-specific resume for this role to proceed.
                   </p>
-                  <label className="w-full py-2.5 px-4 rounded-xl border border-dashed border-purple-500/50 hover:border-purple-400 bg-purple-950/20 hover:bg-purple-950/40 text-purple-300 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors">
+                  <label className="w-full py-2.5 px-4 rounded-xl border border-dashed border-indigo-300 hover:border-indigo-500 bg-indigo-50/50 hover:bg-indigo-50 text-indigo-700 text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors">
                     <Upload className="w-4 h-4" />
                     {uploadingResume ? 'Attaching Resume...' : 'Upload Role Resume (PDF / DOCX)'}
                     <input
@@ -448,7 +448,7 @@ export const OpportunityDetail = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Cover Note / Why are you a great fit? (Optional)
               </label>
               <textarea
@@ -456,11 +456,11 @@ export const OpportunityDetail = () => {
                 value={coverLetter}
                 onChange={(e) => setCoverLetter(e.target.value)}
                 placeholder="Share relevant projects, portfolio highlights, or key skills..."
-                className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:bg-white text-xs font-medium"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
               <Button variant="ghost" size="md" onClick={() => setApplyModalOpen(false)}>
                 Cancel
               </Button>

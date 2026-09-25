@@ -4,17 +4,20 @@ import { Loader2 } from 'lucide-react';
 export const Loader = ({ message = 'Loading...', fullScreen = false }) => {
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-        <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
-        <p className="text-sm font-medium text-slate-300">{message}</p>
+      <div className="fixed inset-0 bg-slate-900/30 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+        <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xl flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
+          <p className="text-sm font-semibold text-slate-700">{message}</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col items-center justify-center p-12">
-      <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-3" />
-      <p className="text-sm text-slate-400">{message}</p>
+      <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-3" />
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{message}</p>
     </div>
   );
 };
+

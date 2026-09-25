@@ -103,9 +103,9 @@ export const ManageOpportunities = () => {
     >
       {/* Verification notice if pending */}
       {!isVerified && profile && (
-        <div className="mb-6 p-4 rounded-2xl bg-amber-950/60 border border-amber-800/60 flex items-center justify-between text-amber-300 text-sm">
+        <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-between text-amber-900 text-sm">
           <div className="flex items-center gap-3">
-            <Lock className="w-5 h-5 flex-shrink-0 text-amber-400" />
+            <Lock className="w-5 h-5 flex-shrink-0 text-amber-600" />
             <span>
               Your company is currently <strong>Pending Admin Review</strong>. Once approved, you can create new postings and receive candidate applicants.
             </span>
@@ -120,10 +120,12 @@ export const ManageOpportunities = () => {
       {loading ? (
         <Loader message="Loading your opportunity postings..." />
       ) : opportunities.length === 0 ? (
-        <div className="p-12 text-center rounded-2xl bg-slate-900/60 border border-slate-800 space-y-4">
-          <Briefcase className="w-12 h-12 text-slate-600 mx-auto" />
-          <h3 className="text-lg font-bold text-white">No active postings yet</h3>
-          <p className="text-sm text-slate-400 max-w-md mx-auto">
+        <div className="p-12 text-center rounded-2xl bg-white border border-slate-200/90 shadow-nexus-sm space-y-4">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center mx-auto text-indigo-600">
+            <Briefcase className="w-6 h-6" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-900">No active postings yet</h3>
+          <p className="text-sm text-slate-500 max-w-md mx-auto">
             Post an opportunity to begin receiving AI-scored candidate applications.
           </p>
           <Link to="/company/post-opportunity">
@@ -137,41 +139,41 @@ export const ManageOpportunities = () => {
           {opportunities.map((opp) => (
             <div
               key={opp.id}
-              className="p-6 sm:p-7 rounded-3xl bg-slate-900/90 border border-slate-800 space-y-5 hover:border-slate-700 transition-all shadow-lg"
+              className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 space-y-5 hover:border-indigo-300 transition-all shadow-nexus-sm hover:shadow-nexus"
             >
               {/* Header row */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-2 flex-1">
                   <div className="flex items-center gap-2">
-                    <Badge variant={opp.status === 'OPEN' ? 'success' : 'default'} size="sm">
+                    <Badge variant={opp.status === 'OPEN' ? 'emerald' : 'default'} size="sm">
                       {opp.status}
                     </Badge>
-                    <Badge variant="primary" size="sm">{opp.type.replace('_', ' ')}</Badge>
-                    {opp.isRemote && <Badge variant="cyan" size="sm">Remote</Badge>}
+                    <Badge variant="indigo" size="sm">{opp.type.replace('_', ' ')}</Badge>
+                    {opp.isRemote && <Badge variant="sky" size="sm">Remote</Badge>}
                   </div>
 
-                  <h3 className="text-xl font-bold text-white">
-                    <Link to={`/opportunities/${opp.id}`} className="hover:text-blue-400 transition-colors">
+                  <h3 className="text-xl font-bold text-slate-900">
+                    <Link to={`/opportunities/${opp.id}`} className="hover:text-indigo-600 transition-colors">
                       {opp.title}
                     </Link>
                   </h3>
 
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
                     <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
                       {opp.location}
                     </span>
                     <span>•</span>
-                    <span>Stipend: <strong className="text-slate-200">{opp.stipend || 'Competitive'}</strong></span>
+                    <span>Stipend: <strong className="text-slate-800 font-semibold">{opp.stipend || 'Competitive'}</strong></span>
                     <span>•</span>
-                    <span>Deadline: <strong className="text-slate-200">{opp.deadline || 'Rolling'}</strong></span>
+                    <span>Deadline: <strong className="text-slate-800 font-semibold">{opp.deadline || 'Rolling'}</strong></span>
                   </div>
                 </div>
 
                 {/* Action buttons */}
                 <div className="flex items-center gap-3">
                   <Link to={`/company/applicants?opportunityId=${opp.id}`}>
-                    <Button variant="accent" size="sm" icon={Users}>
+                    <Button variant="primary" size="sm" icon={Users}>
                       Pipeline ({opp.applicantCount || 0})
                     </Button>
                   </Link>
@@ -187,7 +189,7 @@ export const ManageOpportunities = () => {
                   <button
                     onClick={() => handleDelete(opp.id)}
                     title="Delete Posting"
-                    className="p-2.5 rounded-xl border border-slate-800 text-slate-500 hover:text-rose-400 hover:bg-slate-950 transition-colors"
+                    className="p-2.5 rounded-xl border border-slate-200 text-slate-400 hover:text-rose-600 hover:bg-slate-50 transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -195,15 +197,15 @@ export const ManageOpportunities = () => {
               </div>
 
               {/* Applicant Student Names List */}
-              <div className="pt-4 border-t border-slate-800/80 space-y-3">
+              <div className="pt-4 border-t border-slate-100 space-y-3">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-purple-400" /> Registered Student Applicants ({opp.applicantCount || 0})
+                  <span className="font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-indigo-600" /> Registered Student Applicants ({opp.applicantCount || 0})
                   </span>
                   {opp.recentApplicants?.length > 0 && (
                     <Link
                       to={`/company/applicants?opportunityId=${opp.id}`}
-                      className="text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1"
+                      className="text-indigo-600 hover:text-indigo-700 font-semibold flex items-center gap-1"
                     >
                       Evaluate in Pipeline &rarr;
                     </Link>
@@ -216,14 +218,14 @@ export const ManageOpportunities = () => {
                       <Link
                         key={app.applicationId || app.studentId}
                         to={`/company/applicants?opportunityId=${opp.id}`}
-                        className="p-3 rounded-xl bg-slate-950/80 border border-slate-800/80 hover:border-purple-500/50 flex items-center justify-between gap-3 group transition-all"
+                        className="p-3 rounded-xl bg-slate-50 border border-slate-200 hover:border-indigo-300 flex items-center justify-between gap-3 group transition-all"
                       >
                         <div className="flex items-center gap-2.5 truncate">
-                          <div className="w-7 h-7 rounded-lg bg-purple-950 border border-purple-800 flex items-center justify-center text-purple-300 font-bold text-xs flex-shrink-0">
+                          <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs flex-shrink-0">
                             {app.studentName ? app.studentName.substring(0, 1).toUpperCase() : 'S'}
                           </div>
                           <div className="truncate">
-                            <span className="text-xs font-bold text-white group-hover:text-purple-300 transition-colors block truncate">
+                            <span className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors block truncate">
                               {app.studentName}
                             </span>
                             <span className="text-[10px] text-slate-500 block truncate">
@@ -235,11 +237,11 @@ export const ManageOpportunities = () => {
                         <Badge
                           variant={
                             app.status === 'SELECTED'
-                              ? 'success'
+                              ? 'emerald'
                               : app.status === 'SHORTLISTED'
                               ? 'purple'
                               : app.status === 'UNDER_REVIEW'
-                              ? 'primary'
+                              ? 'indigo'
                               : 'default'
                           }
                           size="sm"
@@ -250,8 +252,8 @@ export const ManageOpportunities = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-3.5 rounded-xl bg-slate-950/40 border border-slate-800/60 text-xs text-slate-500 flex items-center gap-2">
-                    <User className="w-3.5 h-3.5 text-slate-600" />
+                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 flex items-center gap-2">
+                    <User className="w-3.5 h-3.5 text-slate-400" />
                     <span>No students have submitted applications for this role yet.</span>
                   </div>
                 )}

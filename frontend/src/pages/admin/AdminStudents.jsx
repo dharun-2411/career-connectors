@@ -69,15 +69,15 @@ export const AdminStudents = () => {
       subtitle="View, search, and manage student accounts and platform access."
     >
       {/* Search Bar */}
-      <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800 mb-8 max-w-md">
+      <div className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-nexus-sm mb-8 max-w-md">
         <div className="relative">
-          <Search className="w-5 h-5 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-5 h-5 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search students by name, email, university..."
-            className="w-full pl-11 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 text-sm"
+            className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-500 text-sm focus:bg-white transition-all"
           />
         </div>
       </div>
@@ -86,9 +86,9 @@ export const AdminStudents = () => {
         <Loader message="Fetching student directory..." />
       ) : (
         <div className="space-y-4">
-          <div className="overflow-x-auto rounded-3xl border border-slate-800 bg-slate-900/90">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200/90 bg-white shadow-nexus-sm">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-950/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+              <thead className="bg-slate-50/90 text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-200">
                 <tr>
                   <th className="p-4">Student</th>
                   <th className="p-4">University & Degree</th>
@@ -97,36 +97,36 @@ export const AdminStudents = () => {
                   <th className="p-4 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-300">
+              <tbody className="divide-y divide-slate-100 text-slate-700">
                 {students.map((st) => (
-                  <tr key={st.id || st.userId} className="hover:bg-slate-800/40 transition-colors">
+                  <tr key={st.id || st.userId} className="hover:bg-slate-50/70 transition-colors">
                     <td className="p-4">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white text-sm">{st.name}</span>
-                        <Badge variant={st.status === 'SUSPENDED' ? 'danger' : 'success'} size="sm">
+                        <span className="font-bold text-slate-900 text-sm">{st.name}</span>
+                        <Badge variant={st.status === 'SUSPENDED' ? 'rose' : 'emerald'} size="sm">
                           {st.status || 'ACTIVE'}
                         </Badge>
                       </div>
-                      <div className="text-slate-500 text-[11px]">{st.email}</div>
+                      <div className="text-slate-400 text-[11px]">{st.email}</div>
                     </td>
                     <td className="p-4">
-                      <div className="font-semibold text-slate-200">{st.university || 'N/A'}</div>
-                      <div className="text-slate-400 text-[11px]">{st.education || 'N/A'}</div>
+                      <div className="font-semibold text-slate-800">{st.university || 'N/A'}</div>
+                      <div className="text-slate-500 text-[11px]">{st.education || 'N/A'}</div>
                     </td>
                     <td className="p-4">
                       <div className="flex flex-wrap gap-1 max-w-xs">
                         {st.skills?.slice(0, 3).map((sk) => (
-                          <span key={sk.id} className="px-2 py-0.5 rounded bg-slate-800 text-[10px] text-slate-300">
+                          <span key={sk.id} className="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-100 text-[10px] text-indigo-700 font-medium">
                             {sk.skillName}
                           </span>
                         ))}
                         {st.skills?.length > 3 && (
-                          <span className="text-[10px] text-slate-500">+{st.skills.length - 3}</span>
+                          <span className="text-[10px] text-slate-400 font-medium">+{st.skills.length - 3}</span>
                         )}
                       </div>
                     </td>
                     <td className="p-4">
-                      <div className="text-slate-400">{st.phone || 'N/A'}</div>
+                      <div className="text-slate-500">{st.phone || 'N/A'}</div>
                     </td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-2">
@@ -140,7 +140,7 @@ export const AdminStudents = () => {
                         <button
                           onClick={() => handleDelete(st.userId)}
                           title="Delete User"
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-950"
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-slate-100 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
