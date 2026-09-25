@@ -62,7 +62,7 @@ export const Register = () => {
     const regCompanies = JSON.parse(localStorage.getItem('registered_companies') || '[]');
     const verifiedCompanies = JSON.parse(
       localStorage.getItem('verified_companies') ||
-        '["1","2","recruiter@nexusai.com","hiring@cloudscale.io","shakthisaran@gmail.com"]'
+        '["1","2","recruiter.nexus@nexusai.com","recruiter@nexusai.com","hiring@cloudscale.io","shakthisaran@gmail.com"]'
     );
 
     const matched = regCompanies.find((c) => c.email?.toLowerCase() === cleanEmail);
@@ -688,7 +688,7 @@ export const Register = () => {
                       required
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder={roleType === 'COMPANY' ? 'careers@mycompany.com' : 'name@domain.com'}
+                      placeholder={roleType === 'COMPANY' ? 'firstname.lastname@companydomain.com' : 'name@domain.com'}
                       className="w-full pl-10 pr-3 py-2.5 bg-white border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-indigo-600 text-sm shadow-sm"
                     />
                   </div>

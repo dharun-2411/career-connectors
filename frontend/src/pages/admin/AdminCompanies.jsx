@@ -46,7 +46,7 @@ export const AdminCompanies = () => {
       );
 
       // Sync verified companies in localStorage
-      const verified = JSON.parse(localStorage.getItem('verified_companies') || '["1","2","recruiter@nexusai.com","hiring@cloudscale.io","shakthisaran@gmail.com"]');
+      const verified = JSON.parse(localStorage.getItem('verified_companies') || '["1","2","recruiter.nexus@nexusai.com","recruiter@nexusai.com","hiring@cloudscale.io","shakthisaran@gmail.com"]');
       if (verificationStatus === 'VERIFIED') {
         if (!verified.includes(String(companyId))) {
           verified.push(String(companyId));

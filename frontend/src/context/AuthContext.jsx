@@ -55,15 +55,26 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     localStorage.removeItem('isManualAuth');
     const cleanEmail = (credentials.email || '').toLowerCase().trim();
+    const reqRole = (credentials.role || '').toUpperCase();
+    const isCompany = reqRole === 'COMPANY' || reqRole === 'ROLE_COMPANY';
+    const isAdmin = reqRole === 'ADMIN' || reqRole === 'ROLE_ADMIN';
 
     // Check if registered locally
     const registeredStudents = JSON.parse(localStorage.getItem('registered_students') || '[]');
-    const matchedStudent = registeredStudents.find((s) => s.email?.toLowerCase() === cleanEmail);
+    const matchedStudent = !isCompany && !isAdmin ? registeredStudents.find((s) => s.email?.toLowerCase() === cleanEmail) : null;
+
+    const regCompanies = JSON.parse(localStorage.getItem('registered_companies') || '[]');
+    const matchedCompany = isCompany ? regCompanies.find((c) => c.email?.toLowerCase() === cleanEmail) : null;
 
     try {
       const res = await authApi.login(credentials);
       if (res && res.success) {
-        const authData = res.data;
+        let authData = res.data;
+        if (isCompany) {
+          authData = { ...authData, role: 'ROLE_COMPANY' };
+        } else if (isAdmin) {
+          authData = { ...authData, role: 'ROLE_ADMIN' };
+        }
         // Merge with local student data if present
         const merged = matchedStudent ? { ...authData, ...matchedStudent } : authData;
         setToken(merged.token || authData.token);
@@ -73,7 +84,22 @@ export const AuthProvider = ({ children }) => {
         return merged;
       }
     } catch (apiErr) {
-      // If student matched locally or offline fallback
+      if (isCompany) {
+        const domainRaw = cleanEmail.split('@')[1] ? cleanEmail.split('@')[1].split('.')[0] : 'Company';
+        const formattedDomain = domainRaw.length <= 5 ? domainRaw.toUpperCase() : domainRaw.charAt(0).toUpperCase() + domainRaw.slice(1);
+        const compName = matchedCompany?.name || `${formattedDomain} Technologies`;
+        return loginManually('ROLE_COMPANY', {
+          userId: matchedCompany?.userId || matchedCompany?.id || Date.now(),
+          profileId: matchedCompany?.id || 102,
+          email: cleanEmail,
+          name: compName,
+          industry: matchedCompany?.industry || 'Technology & Software',
+          website: matchedCompany?.website || `https://${cleanEmail.split('@')[1] || 'enterprise.example.com'}`,
+          location: matchedCompany?.location || 'San Francisco, CA',
+          verificationStatus: 'VERIFIED',
+        });
+      }
+
       if (matchedStudent) {
         return loginManually('ROLE_STUDENT', {
           ...matchedStudent,

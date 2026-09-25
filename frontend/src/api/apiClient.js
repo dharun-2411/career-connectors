@@ -388,6 +388,49 @@ const getMockDataForUrl = (url, method, requestData) => {
 
   if (cleanUrl.includes('/auth/login')) {
     const cleanEmail = (parsedData.email || '').toLowerCase().trim();
+    const reqRole = (parsedData.role || '').toUpperCase();
+    const isCompany = reqRole === 'COMPANY' || reqRole === 'ROLE_COMPANY' || cleanEmail.includes('company') || cleanEmail.includes('recruiter') || cleanEmail.includes('corp') || cleanEmail.includes('nexus') || cleanEmail.includes('cloudscale') || cleanEmail.includes('fintech') || cleanEmail.includes('kgisl');
+    const isAdmin = reqRole === 'ADMIN' || reqRole === 'ROLE_ADMIN' || cleanEmail.includes('admin');
+
+    if (isCompany) {
+      const regCompanies = getStore('registered_companies', []);
+      const matchedComp = regCompanies.find((c) => c.email?.toLowerCase() === cleanEmail);
+      const domainRaw = cleanEmail.split('@')[1] ? cleanEmail.split('@')[1].split('.')[0] : 'Company';
+      const formattedDomain = domainRaw.length <= 5 ? domainRaw.toUpperCase() : domainRaw.charAt(0).toUpperCase() + domainRaw.slice(1);
+      const compName = matchedComp?.name || `${formattedDomain} Technologies`;
+
+      const authResponse = {
+        token: `token_company_${Date.now()}`,
+        tokenType: 'Bearer',
+        userId: matchedComp?.userId || matchedComp?.id || 102,
+        profileId: matchedComp?.id || 102,
+        email: cleanEmail,
+        name: compName,
+        role: 'ROLE_COMPANY',
+        verificationStatus: 'VERIFIED',
+        industry: matchedComp?.industry || 'Technology & Software',
+        location: matchedComp?.location || 'San Francisco, CA',
+        website: matchedComp?.website || `https://${cleanEmail.split('@')[1] || 'enterprise.example.com'}`,
+      };
+      setStore('user', authResponse);
+      return authResponse;
+    }
+
+    if (isAdmin) {
+      const authResponse = {
+        token: `token_admin_${Date.now()}`,
+        tokenType: 'Bearer',
+        userId: 103,
+        profileId: 103,
+        email: cleanEmail,
+        name: 'Platform Administrator',
+        role: 'ROLE_ADMIN',
+        department: 'Platform Administration',
+      };
+      setStore('user', authResponse);
+      return authResponse;
+    }
+
     const registered = getStore('registered_students', []);
     const matched = registered.find((s) => s.email?.toLowerCase() === cleanEmail);
 
@@ -402,13 +445,13 @@ const getMockDataForUrl = (url, method, requestData) => {
     }
 
     const authResponse = {
-      token: `token_${Date.now()}`,
+      token: `token_student_${Date.now()}`,
       tokenType: 'Bearer',
       userId: matched?.userId || Date.now(),
       profileId: matched?.profileId || Date.now(),
       email: cleanEmail,
       name: userName,
-      role: cleanEmail.includes('admin') ? 'ROLE_ADMIN' : cleanEmail.includes('company') || cleanEmail.includes('recruiter') ? 'ROLE_COMPANY' : 'ROLE_STUDENT',
+      role: 'ROLE_STUDENT',
       university: matched?.university || 'University of Washington',
       education: matched?.education || 'B.S. Computer Science',
       graduationYear: matched?.graduationYear || 2025,
@@ -545,7 +588,7 @@ const getMockDataForUrl = (url, method, requestData) => {
 
   // --- 2. COMPANY PROFILE & OPPORTUNITIES ---
   if (cleanUrl.endsWith('/company/profile')) {
-    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
+    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter.nexus@nexusai.com', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
     const isApproved =
       verifiedCompanies.includes(String(savedUser.profileId)) ||
       verifiedCompanies.includes(String(savedUser.userId)) ||
@@ -1214,7 +1257,7 @@ const getMockDataForUrl = (url, method, requestData) => {
   if (cleanUrl.includes('/admin/stats')) {
     const allOpps = getStore('all_opportunities', INITIAL_OPPORTUNITIES);
     const allApps = getStore('all_applications', INITIAL_APPLICATIONS);
-    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
+    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter.nexus@nexusai.com', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
 
     return {
       totalStudents: 142,
@@ -1311,7 +1354,7 @@ const getMockDataForUrl = (url, method, requestData) => {
   // --- 8. AUTHENTICATION (LOGIN & REGISTRATION FALLBACK) ---
   if (cleanUrl.includes('/auth/register/company')) {
     const regCompanies = getStore('registered_companies', []);
-    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
+    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter.nexus@nexusai.com', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
     const targetEmail = (parsedData.email || '').toLowerCase().trim();
     const targetName = parsedData.name || 'Company Partner';
 
@@ -1416,7 +1459,7 @@ const getMockDataForUrl = (url, method, requestData) => {
     const email = (parsedData.email || '').toLowerCase().trim();
     const password = parsedData.password;
     const regCompanies = getStore('registered_companies', []);
-    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
+    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter.nexus@nexusai.com', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
 
     // Admin login check
     if (email.includes('admin')) {
@@ -1432,7 +1475,9 @@ const getMockDataForUrl = (url, method, requestData) => {
 
     // Company login check
     const matchedReg = regCompanies.find((c) => c.email?.toLowerCase() === email);
-    const isCompanyEmail = email.includes('company') || email.includes('recruiter') || email.includes('corp') || email.includes('nexus') || email.includes('cloudscale') || email.includes('fintech') || email.includes('hiring@') || email.includes('careers@') || !!matchedReg;
+    const localPart = email.split('@')[0] || '';
+    const hasFirstLast = localPart.includes('.') && localPart.split('.').every(p => p.length > 0);
+    const isCompanyEmail = email.includes('company') || email.includes('recruiter') || email.includes('corp') || email.includes('nexus') || email.includes('cloudscale') || email.includes('fintech') || email.includes('hiring@') || email.includes('careers@') || hasFirstLast || !!matchedReg;
 
     if (matchedReg || isCompanyEmail) {
       if (matchedReg && matchedReg.password && matchedReg.password !== password) {
@@ -1486,13 +1531,17 @@ const getMockDataForUrl = (url, method, requestData) => {
         throw error;
       }
 
+      const domainRaw = email.split('@')[1] ? email.split('@')[1].split('.')[0] : 'Company';
+      const formattedDomain = domainRaw.length <= 5 ? domainRaw.toUpperCase() : domainRaw.charAt(0).toUpperCase() + domainRaw.slice(1);
       const compName = matchedReg
         ? matchedReg.name
         : email.includes('cloudscale')
         ? 'CloudScale Systems'
         : email.includes('fintech')
         ? 'FinTech Innovations Corp'
-        : 'Nexus AI Technologies';
+        : email.includes('nexus')
+        ? 'Nexus AI Technologies'
+        : `${formattedDomain} Technologies`;
 
       return {
         token: `token_company_${Date.now()}`,
@@ -1521,7 +1570,7 @@ const getMockDataForUrl = (url, method, requestData) => {
     const verifyIdx = parts.indexOf('verify');
     const companyId = String(parts[verifyIdx - 1]);
     const newStatus = parsedData.verificationStatus || 'VERIFIED';
-    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
+    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter.nexus@nexusai.com', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
 
     if (newStatus === 'VERIFIED') {
       if (!verifiedCompanies.includes(companyId)) {
@@ -1551,7 +1600,7 @@ const getMockDataForUrl = (url, method, requestData) => {
   }
 
   if (cleanUrl.includes('/admin/companies')) {
-    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
+    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter.nexus@nexusai.com', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
     const regCompanies = getStore('registered_companies', []);
     const baseList = [
       { id: 6, name: 'Databricks Cloud Platform', industry: 'Cloud & AI Infrastructure', verificationStatus: verifiedCompanies.includes('6') ? 'VERIFIED' : 'PENDING', location: 'San Francisco, CA', email: 'careers@databricks.example.com', documentsUrl: 'https://example.com/docs' },
@@ -1559,7 +1608,7 @@ const getMockDataForUrl = (url, method, requestData) => {
       { id: 4, name: 'Oracle Cloud Systems', industry: 'Enterprise Cloud', verificationStatus: 'VERIFIED', location: 'Austin, TX', email: 'shakthisaran@gmail.com' },
       { id: 3, name: 'FinTech Innovations Corp', industry: 'Financial Technology & Web3', verificationStatus: verifiedCompanies.includes('3') ? 'VERIFIED' : 'PENDING', location: 'New York, NY', email: 'talent@fintechinnovations.com', documentsUrl: 'https://example.com/docs' },
       { id: 2, name: 'CloudScale Systems', industry: 'Cloud Infrastructure & DevOps', verificationStatus: 'VERIFIED', location: 'Seattle, WA', email: 'hiring@cloudscale.io' },
-      { id: 1, name: 'Nexus AI Technologies', industry: 'Artificial Intelligence & Enterprise Software', verificationStatus: 'VERIFIED', location: 'San Francisco, CA', email: 'recruiter@nexusai.com' },
+      { id: 1, name: 'Nexus AI Technologies', industry: 'Artificial Intelligence & Enterprise Software', verificationStatus: 'VERIFIED', location: 'San Francisco, CA', email: 'recruiter.nexus@nexusai.com' },
     ];
 
     const formattedReg = regCompanies.map((c) => ({

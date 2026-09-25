@@ -82,7 +82,7 @@ public class DataSeeder implements CommandLineRunner {
         // 3. Seed Companies
         // Company 1: Nexus AI
         User compUser1 = userRepository.save(User.builder()
-                .email("recruiter@nexusai.com")
+                .email("recruiter.nexus@nexusai.com")
                 .passwordHash(defaultPass)
                 .role(Role.ROLE_COMPANY)
                 .status(UserStatus.ACTIVE)
