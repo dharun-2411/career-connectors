@@ -16,6 +16,13 @@ export const RoleRoute = ({ allowedRoles = [] }) => {
 
   const hasRole = allowedRoles.includes(user?.role);
   if (!hasRole) {
+    if (user?.role === 'ROLE_STUDENT') {
+      return <Navigate to="/student/dashboard" replace />;
+    } else if (user?.role === 'ROLE_COMPANY') {
+      return <Navigate to="/company/dashboard" replace />;
+    } else if (user?.role === 'ROLE_ADMIN') {
+      return <Navigate to="/admin/dashboard" replace />;
+    }
     return <Navigate to="/" replace />;
   }
 

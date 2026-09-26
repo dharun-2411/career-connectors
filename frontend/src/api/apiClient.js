@@ -3,6 +3,12 @@ import axios from 'axios';
 const getBaseUrl = () => {
   if (import.meta.env.VITE_API_BASE_URL) {
     const base = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, '');
+    if (base.endsWith('/api/v1')) {
+      return base;
+    }
+    if (base.endsWith('/api')) {
+      return `${base}/v1`;
+    }
     return `${base}/api/v1`;
   }
   return '/api/v1';
@@ -386,43 +392,150 @@ const getMockDataForUrl = (url, method, requestData) => {
     return authResponse;
   }
 
-  if (cleanUrl.includes('/auth/login')) {
-    const cleanEmail = (parsedData.email || '').toLowerCase().trim();
-    const reqRole = (parsedData.role || '').toUpperCase();
-    const isCompany = reqRole === 'COMPANY' || reqRole === 'ROLE_COMPANY' || cleanEmail.includes('company') || cleanEmail.includes('recruiter') || cleanEmail.includes('corp') || cleanEmail.includes('nexus') || cleanEmail.includes('cloudscale') || cleanEmail.includes('fintech') || cleanEmail.includes('kgisl');
-    const isAdmin = reqRole === 'ADMIN' || reqRole === 'ROLE_ADMIN' || cleanEmail.includes('admin');
+  if (cleanUrl.includes('/auth/register/company')) {
+    const regCompanies = getStore('registered_companies', []);
+    const verifiedCompanies = getStore('verified_companies', [
+      '1',
+      '2',
+      'recruiter.nexus@nexusai.com',
+      'recruiter@nexusai.com',
+      'hiring@cloudscale.io',
+      'shakthisaran@gmail.com',
+    ]);
+    const targetEmail = (parsedData.email || '').toLowerCase().trim();
+    const targetName = parsedData.name || 'Company Partner';
 
-    if (isCompany) {
-      const regCompanies = getStore('registered_companies', []);
-      const matchedComp = regCompanies.find((c) => c.email?.toLowerCase() === cleanEmail);
-      const domainRaw = cleanEmail.split('@')[1] ? cleanEmail.split('@')[1].split('.')[0] : 'Company';
-      const formattedDomain = domainRaw.length <= 5 ? domainRaw.toUpperCase() : domainRaw.charAt(0).toUpperCase() + domainRaw.slice(1);
-      const compName = matchedComp?.name || `${formattedDomain} Technologies`;
+    const existingComp = regCompanies.find((c) => c.email?.toLowerCase() === targetEmail);
+    const isApproved =
+      verifiedCompanies.includes(targetEmail) ||
+      (existingComp && (verifiedCompanies.includes(String(existingComp.id)) || existingComp.verificationStatus === 'VERIFIED'));
+    const isRejected = existingComp && existingComp.verificationStatus === 'REJECTED';
 
-      const authResponse = {
-        token: `token_company_${Date.now()}`,
-        tokenType: 'Bearer',
-        userId: matchedComp?.userId || matchedComp?.id || 102,
-        profileId: matchedComp?.id || 102,
-        email: cleanEmail,
-        name: compName,
-        role: 'ROLE_COMPANY',
-        verificationStatus: 'VERIFIED',
-        industry: matchedComp?.industry || 'Technology & Software',
-        location: matchedComp?.location || 'San Francisco, CA',
-        website: matchedComp?.website || `https://${cleanEmail.split('@')[1] || 'enterprise.example.com'}`,
+    if (existingComp) {
+      if (isApproved) {
+        const error = new Error(`Company "${existingComp.name || targetName}" is already registered and approved by the platform administrator. Please sign in to your recruiter account.`);
+        error.response = {
+          status: 409,
+          data: {
+            success: false,
+            message: `Company "${existingComp.name || targetName}" is already registered and approved by the platform administrator. Please sign in to your recruiter account.`,
+            statusType: 'ALREADY_APPROVED',
+            companyName: existingComp.name || targetName,
+            email: targetEmail,
+          },
+        };
+        throw error;
+      }
+
+      if (isRejected) {
+        const error = new Error(`The registration for "${existingComp.name || targetName}" was previously reviewed and declined by the platform administrator. Please contact support@careerconnectors.dev.`);
+        error.response = {
+          status: 403,
+          data: {
+            success: false,
+            message: `The registration for "${existingComp.name || targetName}" was previously reviewed and declined by the platform administrator. Please contact support@careerconnectors.dev.`,
+            statusType: 'REJECTED',
+            isRejected: true,
+            companyName: existingComp.name || targetName,
+            email: targetEmail,
+          },
+        };
+        throw error;
+      }
+
+      const error = new Error(`A registration request for "${existingComp.name || targetName}" is already submitted and pending administrator review.`);
+      error.response = {
+        status: 409,
+        data: {
+          success: false,
+          message: `A registration request for "${existingComp.name || targetName}" is already submitted and pending administrator review.`,
+          statusType: 'ALREADY_PENDING',
+          isPendingApproval: true,
+          companyName: existingComp.name || targetName,
+          email: targetEmail,
+        },
       };
-      setStore('user', authResponse);
-      return authResponse;
+      throw error;
     }
 
-    if (isAdmin) {
+    const newId = Date.now();
+    const newComp = {
+      id: newId,
+      userId: newId,
+      profileId: newId,
+      name: targetName,
+      email: targetEmail,
+      password: parsedData.password,
+      industry: parsedData.industry || 'Technology & Software',
+      website: parsedData.website || 'https://enterprise.example.com',
+      location: parsedData.location || 'San Francisco, CA',
+      description: parsedData.description || 'Pioneering technology and innovative solutions.',
+      verificationStatus: 'PENDING',
+      role: 'ROLE_COMPANY',
+      documentsUrl: 'https://example.com/company_credentials.pdf',
+      createdAt: new Date().toISOString(),
+    };
+    regCompanies.unshift(newComp);
+    setStore('registered_companies', regCompanies);
+
+    return {
+      token: `token_company_${newId}`,
+      userId: newId,
+      profileId: newId,
+      email: newComp.email,
+      name: newComp.name,
+      role: 'ROLE_COMPANY',
+      verificationStatus: 'PENDING',
+      statusType: 'NEW_PENDING',
+    };
+  }
+
+  if (cleanUrl.includes('/auth/login')) {
+    const cleanEmail = (parsedData.email || '').toLowerCase().trim();
+    const password = parsedData.password;
+    const reqRole = (parsedData.role || '').toUpperCase();
+
+    const regCompanies = getStore('registered_companies', []);
+    const regStudents = getStore('registered_students', []);
+    const verifiedCompanies = getStore('verified_companies', [
+      '1',
+      '2',
+      'recruiter.nexus@nexusai.com',
+      'recruiter@nexusai.com',
+      'hiring@cloudscale.io',
+      'shakthisaran@gmail.com',
+    ]);
+
+    const matchedComp = regCompanies.find((c) => c.email?.toLowerCase() === cleanEmail);
+    const matchedStudent = regStudents.find((s) => s.email?.toLowerCase() === cleanEmail);
+
+    // Determine target role strictly by user selected role or explicit registration record
+    let determinedRole = 'ROLE_STUDENT';
+    if (reqRole === 'COMPANY' || reqRole === 'ROLE_COMPANY') {
+      determinedRole = 'ROLE_COMPANY';
+    } else if (reqRole === 'ADMIN' || reqRole === 'ROLE_ADMIN') {
+      determinedRole = 'ROLE_ADMIN';
+    } else if (reqRole === 'STUDENT' || reqRole === 'ROLE_STUDENT') {
+      determinedRole = 'ROLE_STUDENT';
+    } else {
+      // Fallback heuristics only when no role is explicitly passed
+      if (cleanEmail.includes('admin')) {
+        determinedRole = 'ROLE_ADMIN';
+      } else if (matchedComp || cleanEmail.includes('recruiter.nexus') || cleanEmail.includes('cloudscale.io') || cleanEmail.includes('fintechinnovations')) {
+        determinedRole = 'ROLE_COMPANY';
+      } else {
+        determinedRole = 'ROLE_STUDENT';
+      }
+    }
+
+    // 1. ADMIN LOGIN
+    if (determinedRole === 'ROLE_ADMIN') {
       const authResponse = {
         token: `token_admin_${Date.now()}`,
         tokenType: 'Bearer',
         userId: 103,
         profileId: 103,
-        email: cleanEmail,
+        email: cleanEmail || 'admin@careerconnectors.io',
         name: 'Platform Administrator',
         role: 'ROLE_ADMIN',
         department: 'Platform Administration',
@@ -431,34 +544,120 @@ const getMockDataForUrl = (url, method, requestData) => {
       return authResponse;
     }
 
-    const registered = getStore('registered_students', []);
-    const matched = registered.find((s) => s.email?.toLowerCase() === cleanEmail);
+    // 2. COMPANY LOGIN
+    if (determinedRole === 'ROLE_COMPANY') {
+      if (matchedComp && matchedComp.password && password && matchedComp.password !== password) {
+        const error = new Error('Invalid email or password. Please verify your credentials.');
+        error.response = {
+          status: 401,
+          data: {
+            success: false,
+            message: 'Invalid email or password. Please verify your credentials.',
+          },
+        };
+        throw error;
+      }
 
-    let userName = matched?.name;
+      const compId = matchedComp ? String(matchedComp.id) : cleanEmail.includes('nexus') ? '1' : cleanEmail.includes('cloudscale') ? '2' : cleanEmail.includes('fintech') ? '3' : '102';
+      const isVerified =
+        verifiedCompanies.includes(compId) ||
+        verifiedCompanies.includes(cleanEmail) ||
+        (matchedComp && (matchedComp.verificationStatus === 'VERIFIED' || verifiedCompanies.includes(String(matchedComp.id))));
+      const isRejected = matchedComp && matchedComp.verificationStatus === 'REJECTED';
+
+      if (isRejected) {
+        const error = new Error('Your company registration was declined by the administrator. Access to the employer portal cannot be granted. Please contact support@careerconnectors.dev.');
+        error.response = {
+          status: 403,
+          data: {
+            success: false,
+            message: 'Your company registration was declined by the administrator. Access to the employer portal cannot be granted. Please contact support@careerconnectors.dev.',
+            isRejected: true,
+            statusType: 'REJECTED',
+            email: cleanEmail,
+            companyName: matchedComp ? matchedComp.name : 'Company',
+          },
+        };
+        throw error;
+      }
+
+      if (!isVerified && matchedComp && matchedComp.verificationStatus === 'PENDING') {
+        const error = new Error('Your company account is pending administrator verification. Access will be granted once an administrator approves your company.');
+        error.response = {
+          status: 403,
+          data: {
+            success: false,
+            message: 'Your company account is pending administrator verification. Access will be granted once an administrator approves your company.',
+            isPendingApproval: true,
+            statusType: 'PENDING',
+            email: cleanEmail,
+            companyName: matchedComp ? matchedComp.name : 'Company',
+          },
+        };
+        throw error;
+      }
+
+      const domainRaw = cleanEmail.split('@')[1] ? cleanEmail.split('@')[1].split('.')[0] : 'Company';
+      const formattedDomain = domainRaw.length <= 5 ? domainRaw.toUpperCase() : domainRaw.charAt(0).toUpperCase() + domainRaw.slice(1);
+      const compName = matchedComp
+        ? matchedComp.name
+        : cleanEmail.includes('cloudscale')
+        ? 'CloudScale Systems'
+        : cleanEmail.includes('fintech')
+        ? 'FinTech Innovations Corp'
+        : cleanEmail.includes('nexus')
+        ? 'Nexus AI Technologies'
+        : `${formattedDomain} Technologies`;
+
+      const authResponse = {
+        token: `token_company_${Date.now()}`,
+        tokenType: 'Bearer',
+        userId: matchedComp?.userId || matchedComp?.id || Number(compId),
+        profileId: matchedComp?.id || Number(compId),
+        email: cleanEmail,
+        name: compName,
+        role: 'ROLE_COMPANY',
+        verificationStatus: isVerified ? 'VERIFIED' : 'PENDING',
+        industry: matchedComp?.industry || 'Technology & Software',
+        location: matchedComp?.location || 'San Francisco, CA',
+        website: matchedComp?.website || `https://${cleanEmail.split('@')[1] || 'enterprise.example.com'}`,
+      };
+      setStore('user', authResponse);
+      return authResponse;
+    }
+
+    // 3. STUDENT LOGIN
+    let userName = matchedStudent?.name;
     if (!userName) {
-      const emailPrefix = cleanEmail.split('@')[0].replace(/[._]/g, ' ');
-      userName =
-        emailPrefix
-          .split(' ')
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(' ') || 'Student Member';
+      if (cleanEmail === 'alex.chen@university.edu') {
+        userName = 'Alex Chen';
+      } else if (cleanEmail === 'maya.patel@stanford.edu') {
+        userName = 'Maya Patel';
+      } else {
+        const emailPrefix = cleanEmail.split('@')[0].replace(/[._]/g, ' ');
+        userName =
+          emailPrefix
+            .split(' ')
+            .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ') || 'Student Member';
+      }
     }
 
     const authResponse = {
       token: `token_student_${Date.now()}`,
       tokenType: 'Bearer',
-      userId: matched?.userId || Date.now(),
-      profileId: matched?.profileId || Date.now(),
-      email: cleanEmail,
+      userId: matchedStudent?.userId || 101,
+      profileId: matchedStudent?.profileId || 101,
+      email: cleanEmail || 'alex.chen@university.edu',
       name: userName,
       role: 'ROLE_STUDENT',
-      university: matched?.university || 'University of Washington',
-      education: matched?.education || 'B.S. Computer Science',
-      graduationYear: matched?.graduationYear || 2025,
-      phone: matched?.phone || '',
-      bio: matched?.bio || '',
-      resumeUrl: matched?.resumeUrl || '',
-      resumeFileName: matched?.resumeFileName || '',
+      university: matchedStudent?.university || (cleanEmail.includes('stanford') ? 'Stanford University' : 'University of Washington'),
+      education: matchedStudent?.education || 'B.S. Computer Science',
+      graduationYear: matchedStudent?.graduationYear || 2025,
+      phone: matchedStudent?.phone || '',
+      bio: matchedStudent?.bio || 'Passionate student exploring career opportunities.',
+      resumeUrl: matchedStudent?.resumeUrl || '',
+      resumeFileName: matchedStudent?.resumeFileName || '',
     };
     setStore('user', authResponse);
     return authResponse;
@@ -1351,219 +1550,7 @@ const getMockDataForUrl = (url, method, requestData) => {
     return { success: true };
   }
 
-  // --- 8. AUTHENTICATION (LOGIN & REGISTRATION FALLBACK) ---
-  if (cleanUrl.includes('/auth/register/company')) {
-    const regCompanies = getStore('registered_companies', []);
-    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter.nexus@nexusai.com', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
-    const targetEmail = (parsedData.email || '').toLowerCase().trim();
-    const targetName = parsedData.name || 'Company Partner';
 
-    const existingComp = regCompanies.find((c) => c.email?.toLowerCase() === targetEmail);
-    const isApproved =
-      verifiedCompanies.includes(targetEmail) ||
-      (existingComp && (verifiedCompanies.includes(String(existingComp.id)) || existingComp.verificationStatus === 'VERIFIED'));
-    const isRejected = existingComp && existingComp.verificationStatus === 'REJECTED';
-
-    if (existingComp) {
-      if (isApproved) {
-        const error = new Error(`Company "${existingComp.name || targetName}" is already registered and approved by the platform administrator. Please sign in to your recruiter account.`);
-        error.response = {
-          status: 409,
-          data: {
-            success: false,
-            message: `Company "${existingComp.name || targetName}" is already registered and approved by the platform administrator. Please sign in to your recruiter account.`,
-            statusType: 'ALREADY_APPROVED',
-            companyName: existingComp.name || targetName,
-            email: targetEmail,
-          },
-        };
-        throw error;
-      }
-
-      if (isRejected) {
-        const error = new Error(`The registration for "${existingComp.name || targetName}" was previously reviewed and declined by the platform administrator. Please contact support@careerconnectors.dev.`);
-        error.response = {
-          status: 403,
-          data: {
-            success: false,
-            message: `The registration for "${existingComp.name || targetName}" was previously reviewed and declined by the platform administrator. Please contact support@careerconnectors.dev.`,
-            statusType: 'REJECTED',
-            isRejected: true,
-            companyName: existingComp.name || targetName,
-            email: targetEmail,
-          },
-        };
-        throw error;
-      }
-
-      const error = new Error(`A registration request for "${existingComp.name || targetName}" is already submitted and pending administrator review.`);
-      error.response = {
-        status: 409,
-        data: {
-          success: false,
-          message: `A registration request for "${existingComp.name || targetName}" is already submitted and pending administrator review.`,
-          statusType: 'ALREADY_PENDING',
-          isPendingApproval: true,
-          companyName: existingComp.name || targetName,
-          email: targetEmail,
-        },
-      };
-      throw error;
-    }
-
-    const newId = Date.now();
-    const newComp = {
-      id: newId,
-      userId: newId,
-      profileId: newId,
-      name: targetName,
-      email: targetEmail,
-      password: parsedData.password,
-      industry: parsedData.industry || 'Technology & Software',
-      website: parsedData.website || 'https://enterprise.example.com',
-      location: parsedData.location || 'San Francisco, CA',
-      description: parsedData.description || 'Pioneering technology and innovative solutions.',
-      verificationStatus: 'PENDING',
-      role: 'ROLE_COMPANY',
-      documentsUrl: 'https://example.com/company_credentials.pdf',
-      createdAt: new Date().toISOString(),
-    };
-    regCompanies.unshift(newComp);
-    setStore('registered_companies', regCompanies);
-
-    return {
-      token: `token_company_${newId}`,
-      userId: newId,
-      profileId: newId,
-      email: newComp.email,
-      name: newComp.name,
-      role: 'ROLE_COMPANY',
-      verificationStatus: 'PENDING',
-      statusType: 'NEW_PENDING',
-    };
-  }
-
-  if (cleanUrl.includes('/auth/register/student')) {
-    const newId = Date.now();
-    return {
-      token: `token_student_${newId}`,
-      userId: newId,
-      profileId: newId,
-      email: (parsedData.email || '').toLowerCase().trim(),
-      name: parsedData.name || 'Student Member',
-      role: 'ROLE_STUDENT',
-    };
-  }
-
-  if (cleanUrl.includes('/auth/login')) {
-    const email = (parsedData.email || '').toLowerCase().trim();
-    const password = parsedData.password;
-    const regCompanies = getStore('registered_companies', []);
-    const verifiedCompanies = getStore('verified_companies', ['1', '2', 'recruiter.nexus@nexusai.com', 'recruiter@nexusai.com', 'hiring@cloudscale.io', 'shakthisaran@gmail.com']);
-
-    // Admin login check
-    if (email.includes('admin')) {
-      return {
-        token: `token_admin_${Date.now()}`,
-        userId: 103,
-        profileId: 103,
-        email: email,
-        name: 'Platform Administrator',
-        role: 'ROLE_ADMIN',
-      };
-    }
-
-    // Company login check
-    const matchedReg = regCompanies.find((c) => c.email?.toLowerCase() === email);
-    const localPart = email.split('@')[0] || '';
-    const hasFirstLast = localPart.includes('.') && localPart.split('.').every(p => p.length > 0);
-    const isCompanyEmail = email.includes('company') || email.includes('recruiter') || email.includes('corp') || email.includes('nexus') || email.includes('cloudscale') || email.includes('fintech') || email.includes('hiring@') || email.includes('careers@') || hasFirstLast || !!matchedReg;
-
-    if (matchedReg || isCompanyEmail) {
-      if (matchedReg && matchedReg.password && matchedReg.password !== password) {
-        const error = new Error('Invalid email or password. Please verify your credentials.');
-        error.response = {
-          status: 401,
-          data: {
-            success: false,
-            message: 'Invalid email or password. Please verify your credentials.',
-          },
-        };
-        throw error;
-      }
-
-      const compId = matchedReg ? String(matchedReg.id) : email.includes('nexus') ? '1' : email.includes('cloudscale') ? '2' : email.includes('fintech') ? '3' : '102';
-      const isVerified =
-        verifiedCompanies.includes(compId) ||
-        verifiedCompanies.includes(email) ||
-        (matchedReg && matchedReg.verificationStatus === 'VERIFIED');
-      const isRejected = matchedReg && matchedReg.verificationStatus === 'REJECTED';
-
-      if (isRejected) {
-        const error = new Error('Your company registration was declined by the administrator. Access to the employer portal cannot be granted. Please contact support@careerconnectors.dev.');
-        error.response = {
-          status: 403,
-          data: {
-            success: false,
-            message: 'Your company registration was declined by the administrator. Access to the employer portal cannot be granted. Please contact support@careerconnectors.dev.',
-            isRejected: true,
-            statusType: 'REJECTED',
-            email: email,
-            companyName: matchedReg ? matchedReg.name : 'Company',
-          },
-        };
-        throw error;
-      }
-
-      if (!isVerified) {
-        const error = new Error('Your company account is pending administrator verification. Access will be granted once an administrator approves your company.');
-        error.response = {
-          status: 403,
-          data: {
-            success: false,
-            message: 'Your company account is pending administrator verification. Access will be granted once an administrator approves your company.',
-            isPendingApproval: true,
-            statusType: 'PENDING',
-            email: email,
-            companyName: matchedReg ? matchedReg.name : 'Company',
-          },
-        };
-        throw error;
-      }
-
-      const domainRaw = email.split('@')[1] ? email.split('@')[1].split('.')[0] : 'Company';
-      const formattedDomain = domainRaw.length <= 5 ? domainRaw.toUpperCase() : domainRaw.charAt(0).toUpperCase() + domainRaw.slice(1);
-      const compName = matchedReg
-        ? matchedReg.name
-        : email.includes('cloudscale')
-        ? 'CloudScale Systems'
-        : email.includes('fintech')
-        ? 'FinTech Innovations Corp'
-        : email.includes('nexus')
-        ? 'Nexus AI Technologies'
-        : `${formattedDomain} Technologies`;
-
-      return {
-        token: `token_company_${Date.now()}`,
-        userId: matchedReg ? matchedReg.userId : Number(compId),
-        profileId: matchedReg ? matchedReg.id : Number(compId),
-        email: email,
-        name: compName,
-        role: 'ROLE_COMPANY',
-        verificationStatus: 'VERIFIED',
-      };
-    }
-
-    // Student login default
-    return {
-      token: `token_student_${Date.now()}`,
-      userId: 101,
-      profileId: 101,
-      email: email || 'alex.chen@university.edu',
-      name: email ? email.split('@')[0] : 'Alex Chen',
-      role: 'ROLE_STUDENT',
-    };
-  }
 
   if (cleanUrl.includes('/admin/companies') && cleanUrl.includes('/verify')) {
     const parts = cleanUrl.split('/');

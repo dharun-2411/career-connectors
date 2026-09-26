@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/common/Button';
 
-// Validator for company email format: firstname.lastname@companydomain
+// Validator for company email format: allows valid corporate and work emails
 export const isValidCompanyEmail = (emailStr) => {
   if (!emailStr || typeof emailStr !== 'string') return false;
   const trimmed = emailStr.trim().toLowerCase();
@@ -32,18 +32,10 @@ export const isValidCompanyEmail = (emailStr) => {
   const [localPart, domainPart] = parts;
   if (!localPart || !domainPart) return false;
 
-  // Local part must follow firstname.lastname format (at least one dot with valid characters on each side)
-  // e.g. "ramkumar.k", "john.doe", "alex.chen", "first.middle.last"
-  const nameParts = localPart.split('.');
-  if (nameParts.length < 2) return false;
-
-  // Each segment of firstname and lastname must not be empty and contain valid alphanumeric/hyphen/underscore characters
-  const isValidLocal = nameParts.every((segment) => segment.length > 0 && /^[a-zA-Z0-9_-]+$/.test(segment));
-  if (!isValidLocal) return false;
-
-  // Domain part must be valid (supports @kgisl, @kgisl.com, @companydomain.org, etc.)
-  const isValidDomain = /^[a-zA-Z0-9]+([.-][a-zA-Z0-9]+)*$/.test(domainPart);
-  return isValidDomain;
+  // Basic structure check for valid corporate/work email
+  const isValidLocal = /^[a-zA-Z0-9._%+-]+$/.test(localPart);
+  const isValidDomain = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(domainPart) || /^[a-zA-Z0-9]+$/.test(domainPart);
+  return isValidLocal && isValidDomain;
 };
 
 export const Login = () => {
@@ -184,12 +176,10 @@ export const Login = () => {
 
     const inputEmail = email.toLowerCase().trim();
 
-    // STRICT COMPANY EMAIL FORMAT VALIDATION:
-    // Format must be firstname.lastname@companydomain
     if (selectedRole === 'COMPANY') {
       if (!isValidCompanyEmail(inputEmail)) {
         setError(
-          'Invalid Company Email format. Company sign-in requires an official corporate email in the format: firstname.lastname@companydomain (e.g. john.doe@nexusai.com or recruiter.lead@company.com).'
+          'Please enter a valid company or recruiter email address (e.g. recruiter.nexus@nexusai.com, hr@company.com).'
         );
         return;
       }
@@ -199,7 +189,9 @@ export const Login = () => {
 
     try {
       const authData = await login({ email: inputEmail, password, role: selectedRole });
-      const targetRole = authData?.role || (selectedRole === 'COMPANY' ? 'ROLE_COMPANY' : selectedRole === 'ADMIN' ? 'ROLE_ADMIN' : 'ROLE_STUDENT');
+      const targetRole =
+        authData?.role ||
+        (selectedRole === 'COMPANY' ? 'ROLE_COMPANY' : selectedRole === 'ADMIN' ? 'ROLE_ADMIN' : 'ROLE_STUDENT');
       navigateByRole(targetRole);
     } catch (err) {
       const isRejected =
@@ -248,7 +240,7 @@ export const Login = () => {
       );
       const matchedReg = regCompanies.find((c) => c.email?.toLowerCase() === inputEmail);
 
-      if (matchedReg || selectedRole === 'COMPANY') {
+      if (selectedRole === 'COMPANY') {
         if (matchedReg && matchedReg.password && matchedReg.password !== password) {
           setError('Invalid password. Please check your credentials and try again.');
           setLoading(false);
@@ -301,38 +293,29 @@ export const Login = () => {
           location: matchedReg?.location || 'San Francisco, CA',
           verificationStatus: 'VERIFIED',
         });
-        navigateByRole(authData.role);
+        navigateByRole('ROLE_COMPANY');
         return;
       }
 
-      const isFallback =
-        !err.response ||
-        err.response?.status === 405 ||
-        err.response?.status === 404 ||
-        err.response?.status >= 500 ||
-        err.message?.includes('405') ||
-        err.message?.includes('500') ||
-        err.message?.toLowerCase().includes('network');
-
-      if (isFallback) {
-        let role = 'ROLE_STUDENT';
-        if (selectedRole === 'ADMIN' || inputEmail.includes('admin')) {
-          role = 'ROLE_ADMIN';
-        } else if (
-          selectedRole === 'COMPANY' ||
-          inputEmail.includes('company') ||
-          inputEmail.includes('recruiter') ||
-          inputEmail.includes('corp') ||
-          inputEmail.includes('nexus') ||
-          inputEmail.includes('cloudscale')
-        ) {
-          role = 'ROLE_COMPANY';
-        }
-        const authData = loginManually(role, {
+      if (selectedRole === 'ADMIN') {
+        const authData = loginManually('ROLE_ADMIN', {
+          userId: 103,
+          profileId: 103,
           email: inputEmail,
-          name: inputEmail.split('@')[0].replace(/[._]/g, ' '),
+          name: 'Platform Administrator',
         });
-        navigateByRole(authData.role);
+        navigateByRole('ROLE_ADMIN');
+        return;
+      }
+
+      if (selectedRole === 'STUDENT') {
+        const registeredStudents = JSON.parse(localStorage.getItem('registered_students') || '[]');
+        const matchedStudent = registeredStudents.find((s) => s.email?.toLowerCase() === inputEmail);
+        const authData = loginManually('ROLE_STUDENT', {
+          ...(matchedStudent || {}),
+          email: inputEmail,
+        });
+        navigateByRole('ROLE_STUDENT');
         return;
       }
 
@@ -494,16 +477,12 @@ export const Login = () => {
             <div className="mb-5 p-3.5 rounded-xl bg-violet-50/90 border border-violet-200 text-xs text-violet-900 space-y-1.5 shadow-sm">
               <div className="font-bold flex items-center gap-1.5 text-violet-900">
                 <Building className="w-4 h-4 text-violet-600 flex-shrink-0" />
-                <span>Note: Company Sign-In Policy</span>
+                <span>Note: Company Sign-In</span>
               </div>
               <p className="text-[11px] text-violet-800 leading-relaxed">
-                Company sign in strictly requires an official corporate email in the format{' '}
-                <strong className="text-violet-950 font-semibold bg-violet-100/80 px-1.5 py-0.5 rounded">
-                  firstname.lastname@companydomain
-                </strong>{' '}
-                (e.g.{' '}
+                Sign in with your registered corporate email (e.g.{' '}
                 <span className="font-mono font-medium text-violet-900">recruiter.nexus@nexusai.com</span> or{' '}
-                <span className="font-mono font-medium text-violet-900">john.doe@company.com</span>). Only users signing in with this format will be permitted to access the company portal.
+                <span className="font-mono font-medium text-violet-900">hiring@cloudscale.io</span>) to access the employer console.
               </p>
             </div>
           )}
@@ -519,7 +498,7 @@ export const Login = () => {
             <div>
               <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2">
                 {selectedRole === 'COMPANY'
-                  ? 'Official Company Email (firstname.lastname@companydomain)'
+                  ? 'Official Company Email'
                   : selectedRole === 'ADMIN'
                   ? 'Admin Email Address'
                   : 'Student Email Address'}

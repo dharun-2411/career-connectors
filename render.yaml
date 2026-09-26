@@ -1,0 +1,69 @@
+services:
+  # 1. Spring Boot Backend REST API
+  - type: web
+    name: career-connectors-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    region: oregon
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SERVER_PORT
+        value: 8080
+      - key: DB_URL
+        fromDatabase:
+          name: career-connectors-db
+          property: connectionString
+      - key: APP_AI_SERVICE_BASE_URL
+        fromService:
+          type: web
+          name: career-connectors-ai
+          property: host
+          value: http://career-connectors-ai:8000
+      - key: APP_JWT_SECRET
+        generateValue: true
+
+  # 2. Python FastAPI AI Service
+  - type: web
+    name: career-connectors-ai
+    runtime: docker
+    dockerfilePath: ./ai-service/Dockerfile
+    dockerContext: ./ai-service
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: HOST
+        value: 0.0.0.0
+
+  # 3. React / Vite Frontend Static Site
+  - type: web
+    name: career-connectors-frontend
+    runtime: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    plan: free
+    region: oregon
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_BASE_URL
+        fromService:
+          type: web
+          name: career-connectors-backend
+          property: host
+          value: https://career-connectors-backend.onrender.com
+
+databases:
+  # Managed PostgreSQL Database
+  - name: career-connectors-db
+    databaseName: career_connectors
+    user: career_user
+    plan: free
+    region: oregon
+    postgresMajorVersion: 16
